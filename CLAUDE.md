@@ -113,7 +113,7 @@ updated: 2026-11-22
 
 | type | 額外欄位 |
 |---|---|
-| `source` | `cite_key`、`authors`、`year`、`venue`、`raw_path`、`url` |
+| `source` | `cite_key`、`authors`、`year`、`venue`、`raw_path`（字串或清單：一個來源可以對應多個 raw 檔，例如同一門課的多篇筆記）、`url` |
 | `model` | `year`、`family`（`cnn` / `transformer` / `hybrid`）、`tasks`（適用任務的清單） |
 | `task` | `metrics`（評估指標的清單） |
 | `concept` | `first_introduced`（首次提出的 cite key，若可確定） |
@@ -366,7 +366,8 @@ lint 會統計還有幾個 `⚠️ **來源差異**` 沒有釐清。
 
 ## 11. 工具規格
 
-兩支腳本都只用 Python 標準函式庫。
+兩支腳本都只用 Python 標準函式庫，共用的解析邏輯（frontmatter、連結、引用）放在 `tools/wikilib.py`。
+兩支都支援 `--root <dir>`，可以對測試用的假 Wiki 執行。**修改 lint 規則後，要先用一組故意放了錯誤的假 Wiki 測試，確認錯誤都抓得到、沒有誤報，才能用在真正的 Wiki 上。**
 
 ### `tools/lint.py`
 
