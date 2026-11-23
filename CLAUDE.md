@@ -347,7 +347,8 @@ lint 會統計還有幾個 `⚠️ **來源差異**` 沒有釐清。
 ◆ 檢查點 A：使用者確認或調整重點 → 不同意就回到 ②
 ③ 寫入／更新頁面（source 頁、models/tasks/concepts 頁、交叉連結、overview）
 ④ 數字與主張核對：每個有引用的數字，回到原文逐一比對
-⑤ 執行 python tools/lint.py → 有錯誤就回到 ③
+⑤ 執行 python tools/lint.py 和 python tools/review.py
+   → lint 有錯誤，或 review 的「未連結的提及」中有真的漏掉的連結，就回到 ③
 ◆ 檢查點 B：使用者瀏覽更新的頁面 → 有問題就回到 ③
 ⑥ 更新 index.md、log.md → git commit
 ```
