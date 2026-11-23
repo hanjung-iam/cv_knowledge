@@ -138,9 +138,21 @@ def check_citations(p: wl.Page, keys: dict[str, str], r: Report):
             r.add("warning", f"`{p.rel}`：`sources` 列了但內文沒引用：{', '.join(sorted(extra))}")
 
 
-def _units(p: wl.Page):
-    """把 body 切成檢查單位：表格列、清單項目各自一單位；一般段落為一單位。回傳 (起始行號, 文字)。"""
-    buf, start = [], None
+def _units(p: wl.Page) -> list[tuple[int, int, str, str]]:
+    """把 body 切成檢查單位，回傳 [(起始行號, 結束行號, 文字, 種類)]。
+
+    種類：row（表格的一列）、item（清單項目，可延續多行）、para（一般段落）。
+    標題與分隔列不產生單位。
+    """
+    out: list[tuple[int, int, str, str]] = []
+    buf, start, end, kind = [], None, None, "para"
+
+    def flush():
+        nonlocal buf, start, end, kind
+        if buf:
+            out.append((start, end, " ".join(buf), kind))
+        buf, start, end, kind = [], None, None, "para"
+
     for i, line in p.lines:
         ln = i + p.body_offset
         s = line.strip()
@@ -148,23 +160,56 @@ def _units(p: wl.Page):
         is_row = s.startswith("|")
         is_item = bool(re.match(r"^(\s*[-*+]|\s*\d+\.)\s", line))
         if not s or is_heading or is_row or is_item:
-            if buf:
-                yield start, " ".join(buf)
-                buf, start = [], None
+            flush()
             if is_row and not re.match(r"^\|[\s:|-]+\|$", s):
-                yield ln, s
+                out.append((ln, ln, s, "row"))
             elif is_item:
-                buf, start = [s], ln   # 清單項目可延續到下一行
+                buf, start, end, kind = [s], ln, ln, "item"   # 清單項目可延續到下一行
             continue
         if start is None:
             start = ln
+        end = ln
         buf.append(s)
-    if buf:
-        yield start, " ".join(buf)
+    flush()
+    return out
+
+
+def _table_covered(units, first: int, last: int) -> bool:
+    """表格（units[first..last] 都是 row）是否被緊鄰的前一段或後一段的引用涵蓋。
+
+    「緊鄰」：中間最多隔一個空行，且是一般段落（para）。
+    """
+    t_start, t_end = units[first][0], units[last][1]
+    if first > 0:
+        s, e, text, kind = units[first - 1]
+        if kind == "para" and t_start - e <= 2 and wl.find_citations(text):
+            return True
+    if last + 1 < len(units):
+        s, e, text, kind = units[last + 1]
+        if kind == "para" and s - t_end <= 2 and wl.find_citations(text):
+            return True
+    return False
 
 
 def check_numbers(p: wl.Page, r: Report):
-    for ln, text in _units(p):
+    units = _units(p)
+    # 先找出每張表格（連續的 row），判斷整張表是否被前後段落的引用涵蓋
+    covered_rows: set[int] = set()
+    i = 0
+    while i < len(units):
+        if units[i][3] == "row":
+            j = i
+            # 行號差 ≤ 2：分隔列（|---|）不產生單位，所以第一列和第二列之間會差 2
+            while j + 1 < len(units) and units[j + 1][3] == "row" and units[j + 1][0] - units[j][1] <= 2:
+                j += 1
+            if _table_covered(units, i, j):
+                covered_rows.update(range(i, j + 1))
+            i = j + 1
+        else:
+            i += 1
+    for idx, (ln, _, text, kind) in enumerate(units):
+        if idx in covered_rows:
+            continue
         has_cite = bool(wl.find_citations(text))
         cleaned = wl.CITE_RE.sub("", wl.LINK_RE.sub("", text))
         nums = NUMBER_RE.findall(cleaned)
@@ -177,7 +222,7 @@ def check_numbers(p: wl.Page, r: Report):
 
 
 def check_time_sensitive(p: wl.Page, r: Report):
-    for ln, text in _units(p):
+    for ln, _, text, _ in _units(p):
         cleaned = wl.CITE_RE.sub("", wl.LINK_RE.sub("", text))
         m = TIME_SENSITIVE_RE.search(cleaned)
         if m and "截至" not in text:
