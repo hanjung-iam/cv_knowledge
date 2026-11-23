@@ -14,6 +14,8 @@ related:
   - concepts/gradient-descent.md
   - concepts/convolutional-layer.md
   - concepts/convolutional-neural-network.md
+  - concepts/overfitting.md
+  - concepts/neural-network.md
 created: 2026-11-22
 updated: 2026-11-23
 ---
@@ -85,6 +87,11 @@ updated: 2026-11-23
 
 - **Learning rate（step size）**：CS231n 說它會成為訓練神經網路時**最重要、也最令人頭痛的 hyperparameter 之一** [CS231n optimization-1 "Computing the gradient numerically with finite differences"]。太小會很慢，太大則會走過頭，讓 loss 變高。詳見 [Gradient Descent](gradient-descent.md)。
 - **Batch size**：雖然是 hyperparameter，但**通常不用 cross-validation 來選**，而是依記憶體限制決定，或直接設成 32、64、128 這類 2 的次方 [CS231n optimization-1 "Gradient Descent"]。
+
+### 神經網路的大小
+
+- [神經網路](neural-network.md)中間層（hidden layer）的大小是 hyperparameter [CS231n neural-networks-1 "Quick intro"]。
+- 但 CS231n 建議**不要為了避免 overfitting 而把網路縮小**，而是在計算資源允許的範圍內用越大的網路越好，再調整 regularization strength 來控制 overfitting [CS231n neural-networks-1 "Setting number of layers and their sizes"]。詳見 [Overfitting](overfitting.md)。
 
 ### CNN 的 hyperparameter
 

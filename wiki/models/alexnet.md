@@ -12,6 +12,7 @@ related:
   - concepts/convolutional-layer.md
   - models/vggnet.md
   - datasets/ilsvrc.md
+  - concepts/activation-function.md
 created: 2026-11-23
 updated: 2026-11-23
 ---
@@ -98,6 +99,10 @@ CS231n 指出，AlexNet 論文寫的輸入影像大小是 224 × 224，但這「
 > - 「5 個 2 × 2 pooling、最後是 7 × 7 × 512」和同一篇筆記的 **VGGNet 逐層表格**完全吻合（VGGNet 有 5 個 POOL2，最後一個 POOL2 的輸出是 7 × 7 × 512）[CS231n convolutional-networks "Case studies"]。
 >
 > 所以這一段描述的看起來比較像 VGGNet 的架構，而不是 AlexNet（綜合推論，依據 [CS231n convolutional-networks "Convolutional Layer"; CS231n convolutional-networks "Converting FC layers to CONV layers"; CS231n convolutional-networks "Case studies"]）。這一點同樣要在 ingest AlexNet 論文時核對。
+
+### Activation function：ReLU
+
+neural-networks-1 引用 Krizhevsky et al.（AlexNet）論文的一張圖：在相同的 training error 下，ReLU 的收斂速度約是 tanh 的 6 倍 [CS231n neural-networks-1 "Commonly used activation functions" 圖]。內文則寫成「和 sigmoid/tanh 相比」[CS231n neural-networks-1 "Commonly used activation functions"]，但圖中只有 ReLU 和 tanh 兩條曲線。這一點也要在 ingest AlexNet 論文時核對。詳見 [Activation Function](../concepts/activation-function.md)。
 
 ## 限制與後續批評
 

@@ -9,6 +9,7 @@ related:
   - concepts/convolutional-neural-network.md
   - concepts/convolutional-layer.md
   - concepts/backpropagation.md
+  - concepts/overfitting.md
 created: 2026-11-23
 updated: 2026-11-23
 ---
@@ -17,7 +18,7 @@ updated: 2026-11-23
 
 ## 一句話說明
 
-逐步縮小特徵圖的空間尺寸（width、height），以減少參數和計算量，也藉此控制 overfitting [CS231n convolutional-networks "Pooling Layer"]。
+逐步縮小特徵圖的空間尺寸（width、height），以減少參數和計算量，也藉此控制 [overfitting](overfitting.md) [CS231n convolutional-networks "Pooling Layer"]。
 
 ## 直觀理解
 

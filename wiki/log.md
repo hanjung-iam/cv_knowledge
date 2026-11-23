@@ -88,3 +88,12 @@ Append-only 操作紀錄。格式：`## [YYYY-MM-DD] <type> | <title>`，type �
 
 ## [2026-11-23] schema | Ingest 步驟 ⑤ 加入 review.py
 - 單次 ingest 也要跑 review.py 的「未連結的提及」，不只在全域 lint 時使用
+
+## [2026-11-23] ingest | CS231n — neural-networks-1
+- 新增：concepts/neural-network.md, concepts/activation-function.md, concepts/overfitting.md（整合 4 篇筆記）
+- 更新：tasks/image-classification.md、overview.md（插入「神經網路」一步）, concepts/regularization.md（加回 weight decay）, concepts/data-preprocessing.md, concepts/backpropagation.md, concepts/linear-classifier.md, concepts/softmax-cross-entropy.md, concepts/hyperparameter-tuning.md, concepts/gradient-descent.md, models/alexnet.md, concepts/convolutional-neural-network.md, sources/cs231n.md, index.md
+- 數字核對與引用標題核對：全部吻合；兩個網路的參數量驗算正確
+- 修正 overview 中預測來源的句子（Vision Transformer）
+- lint：0 / 1 → 0 / 0；review：補 9 處連結
+- 檢查點 A：建立 overfitting 頁；ReLU 6 倍依圖說寫「和 tanh 相比」
+- 檢查點 B：通過

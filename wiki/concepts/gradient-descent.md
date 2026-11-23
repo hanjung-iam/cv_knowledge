@@ -13,6 +13,7 @@ related:
   - concepts/backpropagation.md
   - concepts/data-preprocessing.md
   - concepts/convolutional-neural-network.md
+  - concepts/activation-function.md
 created: 2026-11-23
 updated: 2026-11-23
 ---
@@ -101,6 +102,7 @@ gradient 告訴我們**方向**，但沒有告訴我們**要走多遠**。這個
 
 - **太小**：進展穩定，但非常慢。
 - **太大**：可能進展比較快，但風險高，會 **overstep（走過頭）**，讓 loss 反而變高 [CS231n optimization-1 "Computing the gradient numerically with finite differences"]。
+- **太大還會讓 ReLU neuron「死掉」**：learning rate 設得太高時，網路中可能有多達 40% 的 ReLU neuron 再也不會被激活 [CS231n neural-networks-1 "Commonly used activation functions"]。詳見 [Activation Function](activation-function.md)。
 - 筆記的示意圖在碗狀的 loss 地形上畫出負 gradient 的方向（白色箭頭），以及沿著這個方向延伸的虛線：小步會穩定接近谷底，大步則可能越過谷底 [CS231n optimization-1 "Computing the gradient numerically with finite differences" 圖]。
 - **資料的尺度也會影響 learning rate**：把輸入資料都乘以 1000，權重的 gradient 也會變成 1000 倍，learning rate 就要調小同樣的倍數 [CS231n optimization-2 "Patterns in backward flow"]。詳見 [Data Preprocessing](data-preprocessing.md)。
 

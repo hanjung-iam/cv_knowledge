@@ -9,6 +9,8 @@ related:
   - concepts/loss-function.md
   - concepts/linear-classifier.md
   - concepts/regularization.md
+  - concepts/neural-network.md
+  - concepts/activation-function.md
 created: 2026-11-23
 updated: 2026-11-23
 ---
@@ -25,7 +27,7 @@ updated: 2026-11-23
 
 Cross-entropy loss 的想法很簡單：**模型給正確答案的機率越高，loss 就越低**。正確答案的機率是 1 時，loss = −log 1 = 0；機率越接近 0，loss 就越大，而且沒有上限。
 
-Softmax classifier 是 binary **Logistic Regression** 推廣到多類別的版本 [CS231n linear-classify "Softmax classifier"]。
+Softmax classifier 是 binary **Logistic Regression** 推廣到多類別的版本 [CS231n linear-classify "Softmax classifier"]。反過來，一個 [sigmoid](activation-function.md) neuron 加上 cross-entropy loss，就是 binary Softmax classifier，也就是 logistic regression [CS231n neural-networks-1 "Single neuron as a linear classifier"]。
 
 ## 技術細節
 

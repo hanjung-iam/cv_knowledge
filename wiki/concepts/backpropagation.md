@@ -13,6 +13,8 @@ related:
   - concepts/linear-classifier.md
   - concepts/convolutional-layer.md
   - concepts/pooling-layer.md
+  - concepts/activation-function.md
+  - concepts/neural-network.md
 created: 2026-11-23
 updated: 2026-11-23
 ---
@@ -126,6 +128,8 @@ $$
 $$
 
 所以實務上，最好把整串 sigmoid 運算**合併成一個 gate**：只用一個簡單的式子就能算出 local gradient，效率更高，數值問題也更少 [CS231n optimization-2 "Modularity: Sigmoid example"]。
+
+> 這裡的 sigmoid 是**教學上的範例**。實務上，（截至 CS231n 筆記撰寫時）sigmoid 已經很少被使用：它會飽和，讓 local gradient 接近 0，在 backprop 中等於「殺死」了 gradient [CS231n neural-networks-1 "Commonly used activation functions"]。詳見 [Activation Function](activation-function.md)。
 
 範例中，權重是 (2, −3, −3)、輸入是 (−1, −2)，內積加上 bias 之後是 1.0，sigmoid 的輸出是 0.73，local gradient 是 (1 − 0.73) × 0.73 ≈ 0.2 [CS231n optimization-2 "Modularity: Sigmoid example"]。這和把 sigmoid 拆成好幾個 gate、逐一 backprop 算出來的結果相同 [CS231n optimization-2 "Modularity: Sigmoid example" 圖]。
 

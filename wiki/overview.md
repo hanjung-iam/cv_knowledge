@@ -23,6 +23,9 @@ related:
   - concepts/pooling-layer.md
   - models/alexnet.md
   - models/vggnet.md
+  - concepts/neural-network.md
+  - concepts/activation-function.md
+  - concepts/overfitting.md
 created: 2026-11-22
 updated: 2026-11-23
 ---
@@ -30,7 +33,7 @@ updated: 2026-11-23
 # Overview：Computer Vision 的演進主線
 
 > 這頁是整個 Wiki 的入口，會隨著每次 ingest 更新。
-> 目前收錄的來源：CS231n（classification、linear-classify、optimization-1、optimization-2、convolutional-networks）。
+> 目前收錄的來源：CS231n（classification、linear-classify、optimization-1、optimization-2、neural-networks-1、convolutional-networks）。
 
 ## Computer Vision 要解決什麼問題
 
@@ -80,7 +83,16 @@ gradient descent 需要 loss 對每個權重的 gradient。[Backpropagation](con
 
 CS231n 的說法是：觀念上最難的部分已經過去了，**ConvNets 只差一小步** [CS231n optimization-2 "Summary"]。
 
-### 第六站：CNN — 為影像量身打造的 score function
+### 第六站：神經網路 — 疊起來的 linear classifier
+
+[神經網路](concepts/neural-network.md)把 linear classifier 疊起來，中間插入非線性：$s = W_2 \max(0, W_1 x)$ [CS231n neural-networks-1 "Quick intro"]。
+
+- **非線性是關鍵**：沒有它，多層網路會退化成一個矩陣 [CS231n neural-networks-1 "Quick intro"]。實務上最常用的是 ReLU [CS231n neural-networks-1 "Commonly used activation functions"]，詳見 [Activation Function](concepts/activation-function.md)。
+- 中間層可以有很多個偵測器，回應了 linear classifier「一類只能有一個模板」的問題 [CS231n linear-classify "Interpreting a linear classifier"]。
+- 網路越大越容易 [overfitting](concepts/overfitting.md)，但 CS231n 建議用大網路加上 regularization，而不是縮小網路 [CS231n neural-networks-1 "Setting number of layers and their sizes"]。
+- 對一般的 FC 網路，3 層之後再加深很少有幫助；但對 CNN，深度非常重要，因為影像有階層結構 [CS231n neural-networks-1 "Representational power"]。
+
+### 第七站：CNN — 為影像量身打造的 score function
 
 [CNN](concepts/convolutional-neural-network.md) 沿用前面的 loss、optimization、backprop，**只換掉 score function** [CS231n convolutional-networks "Convolutional Neural Networks (CNNs / ConvNets)"]。這印證了 optimization-1 的預告 [CS231n optimization-1 "Introduction"]。
 
@@ -95,8 +107,7 @@ CS231n 的說法是：觀念上最難的部分已經過去了，**ConvNets 只�
 
 ### 下一站（待補）
 
-- **神經網路**：CNN 建立在一般的神經網路之上，但目前還沒有收錄介紹神經網路的來源。
-- **更深的模型**：ResNet、以及之後的 Vision Transformer 等，會在對應來源 ingest 之後補上。
+- **更深的模型**：例如 ResNet。目前只有 CS231n 的簡短介紹，會在有更詳細的來源 ingest 之後補上。
 
 ## 貫穿所有方法的紀律
 

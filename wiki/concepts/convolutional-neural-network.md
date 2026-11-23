@@ -14,6 +14,9 @@ related:
   - concepts/backpropagation.md
   - concepts/loss-function.md
   - datasets/ilsvrc.md
+  - concepts/neural-network.md
+  - concepts/activation-function.md
+  - concepts/overfitting.md
 created: 2026-11-23
 updated: 2026-11-23
 ---
@@ -28,7 +31,7 @@ updated: 2026-11-23
 
 前面的 Wiki 已經走過一條路：[kNN](k-nearest-neighbor.md) 直接比對像素，行不通；[linear classifier](linear-classifier.md) 每個類別只能學一個模板，太弱。CNN 是這條路的下一站。
 
-CNN 並沒有推翻前面學到的東西。CS231n 強調，它和一般的神經網路非常相似 [CS231n convolutional-networks "Convolutional Neural Networks (CNNs / ConvNets)"]：
+CNN 並沒有推翻前面學到的東西。CS231n 強調，它和一般的[神經網路](neural-network.md)非常相似 [CS231n convolutional-networks "Convolutional Neural Networks (CNNs / ConvNets)"]：
 
 - 一樣由有可學習權重和 bias 的 neuron 組成；每個 neuron 做內積，再接一個非線性函數。
 - 整個網路仍然是**一個可微分的 score function**，從原始像素一路算到類別分數。
@@ -49,7 +52,7 @@ CNN 並沒有推翻前面學到的東西。CS231n 強調，它和一般的神經
 
 （依據 [CS231n convolutional-networks "Architecture Overview"]。）
 
-而且我們一定會需要很多個這樣的 neuron，參數量會迅速爆增。這種全連接的結構很浪費，而且大量的參數很快就會導致 **overfitting** [CS231n convolutional-networks "Architecture Overview"]。
+而且我們一定會需要很多個這樣的 neuron，參數量會迅速爆增。這種全連接的結構很浪費，而且大量的參數很快就會導致 **[overfitting](overfitting.md)** [CS231n convolutional-networks "Architecture Overview"]。
 
 ## 技術細節
 
@@ -69,7 +72,7 @@ CNN 每一層的 neuron 排成三個維度：**width、height、depth** [CS231n 
 | 層 | 做什麼 | 有參數嗎 | 有 hyperparameter 嗎 | 詳見 |
 |---|---|---|---|---|
 | CONV | 每個 neuron 只連到輸入的一小塊區域，計算權重和該區域的內積 | 有 | 有 | [Convolutional Layer](convolutional-layer.md) |
-| RELU | 逐元素套用激活函數，例如 $\max(0, x)$；volume 大小不變 | 沒有 | 沒有 | |
+| RELU | 逐元素套用[激活函數](activation-function.md)，例如 $\max(0, x)$；volume 大小不變 | 沒有 | 沒有 | |
 | POOL | 在空間維度（width、height）上做 downsampling | 沒有 | 有 | [Pooling Layer](pooling-layer.md) |
 | FC | 和一般神經網路一樣，連到上一層的所有數值，算出類別分數 | 有 | 有 | |
 

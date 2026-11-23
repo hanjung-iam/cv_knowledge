@@ -10,6 +10,7 @@ related:
   - concepts/k-nearest-neighbor.md
   - concepts/backpropagation.md
   - concepts/gradient-descent.md
+  - concepts/activation-function.md
 created: 2026-11-23
 updated: 2026-11-23
 ---
@@ -55,7 +56,11 @@ updated: 2026-11-23
 
 筆記的結論：**這就是為什麼前處理很重要，而且有時候影響的方式很隱微**。對 gradient 怎麼流動有直觀的理解，可以幫助 debug 這類問題 [CS231n optimization-2 "Patterns in backward flow"]。
 
-> **一個部分回收的伏筆**：linear-classify 說 zero mean centering 比較重要，但「原因要等理解 gradient descent 的動態之後才能解釋」[CS231n linear-classify "Interpreting a linear classifier"]。optimization-2 解釋了**尺度**為什麼會影響 gradient [CS231n optimization-2 "Patterns in backward flow"]，但**沒有直接解釋為什麼「中心化」很重要**。所以這個伏筆目前只回收了一部分，要等之後的來源補充（綜合推論，依據 [CS231n linear-classify "Interpreting a linear classifier"; CS231n optimization-2 "Patterns in backward flow"]）。
+> **一個伏筆的回收**：linear-classify 說 zero mean centering 比較重要，但「原因要等理解 gradient descent 的動態之後才能解釋」[CS231n linear-classify "Interpreting a linear classifier"]。
+> - optimization-2 解釋了資料的**尺度**為什麼會影響 gradient [CS231n optimization-2 "Patterns in backward flow"]。
+> - neural-networks-1 在討論 [sigmoid](activation-function.md) 的缺點時說明：如果**輸入一個 neuron 的資料都是正的**，backprop 時權重的 gradient 會全部同號（全正或全負），讓 gradient 更新「之字形」前進 [CS231n neural-networks-1 "Commonly used activation functions"]。
+>
+> 原始像素值 0～255 全部是正數，所以第二點很可能就是「為什麼要中心化」的答案：減去平均之後，輸入有正有負，就不會出現權重 gradient 全部同號的情況（綜合推論，依據 [CS231n linear-classify "Interpreting a linear classifier"; CS231n neural-networks-1 "Commonly used activation functions"]）。不過 neural-networks-1 談的是 sigmoid 的輸出，並沒有直接把這個論點套用到輸入資料的前處理上。
 
 ### 影像資料的特殊之處
 

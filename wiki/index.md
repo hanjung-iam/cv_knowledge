@@ -26,6 +26,9 @@ Computer Vision 知識庫總目錄。每次 ingest 或新增頁面時更新。
 - [Gradient Descent](concepts/gradient-descent.md) — numerical 與 analytic gradient、gradient check、learning rate、mini-batch／SGD（sources: 1）
 - [Backpropagation](concepts/backpropagation.md) — chain rule、電路圖、local gradient、add／max／mul 的模式、staged computation（sources: 1）
 - [Data Preprocessing](concepts/data-preprocessing.md) — centering、縮放；資料尺度會影響 gradient 與 learning rate（sources: 1）
+- [Neural Network](concepts/neural-network.md) — 疊起來的 linear classifier 加上非線性；層狀組織、universal approximator、深度（sources: 1）
+- [Activation Function](concepts/activation-function.md) — sigmoid、tanh、ReLU、Leaky ReLU、Maxout；「用 ReLU，不要用 sigmoid」（sources: 1）
+- [Overfitting](concepts/overfitting.md) — capacity、generalization；用大網路加 regularization，而不是縮小網路（sources: 1）
 - [Convolutional Neural Network (CNN)](concepts/convolutional-neural-network.md) — 為影像設計的神經網路；3D volume、層的排列模式、經典架構演進（sources: 1）
 - [Convolutional Layer](concepts/convolutional-layer.md) — local connectivity、輸出大小公式、parameter sharing、im2col（sources: 1）
 - [Pooling Layer](concepts/pooling-layer.md) — max pooling、downsampling、backward 的 switches（sources: 1）
@@ -44,4 +47,4 @@ Computer Vision 知識庫總目錄。每次 ingest 或新增頁面時更新。
 
 | cite key | 頁面 | 說明 |
 |---|---|---|
-| `CS231n` | [CS231n 課程筆記](sources/cs231n.md) | Stanford CS231n 課程筆記（已 ingest：classification、linear-classify、optimization-1、optimization-2、convolutional-networks） |
+| `CS231n` | [CS231n 課程筆記](sources/cs231n.md) | Stanford CS231n 課程筆記（已 ingest：classification、linear-classify、optimization-1、optimization-2、neural-networks-1、convolutional-networks） |

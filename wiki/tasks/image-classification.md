@@ -13,6 +13,9 @@ related:
   - datasets/cifar-10.md
   - concepts/optimization.md
   - concepts/gradient-descent.md
+  - concepts/neural-network.md
+  - concepts/activation-function.md
+  - concepts/overfitting.md
 created: 2026-11-22
 updated: 2026-11-23
 ---
@@ -117,7 +120,13 @@ CS231n 也預告，後續課程的方法可以做到：
 
 到這裡，「score function + loss function + optimization」三個元件都到齊了。CS231n 預告，接下來只要把 score function 換成神經網路、CNN，loss 和最佳化的過程大致不變 [CS231n optimization-1 "Introduction"]。
 
-### 第四步：CNN — 為影像量身打造的 score function
+### 第四步：神經網路 — 疊起來的 linear classifier
+
+[神經網路](../concepts/neural-network.md)把 linear classifier 疊起來，中間插入非線性：$s = W_2 \max(0, W_1 x)$ [CS231n neural-networks-1 "Quick intro"]。這回應了 linear classifier「一類只能有一個模板」的問題：中間層可以有很多個偵測器，下一層再把它們組合起來 [CS231n linear-classify "Interpreting a linear classifier"]。
+
+非線性（[activation function](../concepts/activation-function.md)）是關鍵；沒有它，多層網路又會變回線性函數 [CS231n neural-networks-1 "Quick intro"]。網路越大，能表達的函數越複雜，但也越容易 [overfitting](../concepts/overfitting.md)，CS231n 建議用大網路加上 regularization 來處理 [CS231n neural-networks-1 "Setting number of layers and their sizes"]。
+
+### 第五步：CNN — 為影像量身打造的 score function
 
 [CNN](../concepts/convolutional-neural-network.md) 沿用 loss、optimization、[backprop](../concepts/backpropagation.md)，換掉的只有 score function [CS231n convolutional-networks "Convolutional Neural Networks (CNNs / ConvNets)"]。它利用「輸入是影像」這個前提，讓每個 neuron 只看一小塊區域（[conv layer](../concepts/convolutional-layer.md)），並在不同位置共用同一組權重，所以參數大幅減少 [CS231n convolutional-networks "Convolutional Layer"]。
 
@@ -125,7 +134,6 @@ CS231n 也預告，後續課程的方法可以做到：
 
 2012 年，[AlexNet](../models/alexnet.md) 在 [ILSVRC](../datasets/ilsvrc.md) 上大幅領先，讓 CNN 在 Computer Vision 中流行起來；之後 [VGGNet](../models/vggnet.md) 證明了深度的重要性，ResNet 則用 skip connections 繼續推進 [CS231n convolutional-networks "Case studies"]。
 
-**中間少了一步**：CNN 是建立在一般「神經網路」之上的，但目前 Wiki 還沒有收錄介紹神經網路的來源。
 
 ## 相關概念
 

@@ -17,6 +17,7 @@ related:
   - concepts/data-preprocessing.md
   - concepts/backpropagation.md
   - concepts/convolutional-neural-network.md
+  - concepts/neural-network.md
 created: 2026-11-23
 updated: 2026-11-23
 ---
@@ -115,7 +116,7 @@ W 的每一列可以看成一個類別的 **template（模板）**，也叫 prot
 - **紅色的車**：car 模板要辨認各種角度、各種顏色的車，最後變成紅色。這暗示 CIFAR-10 裡紅色的車比其他顏色多。
 - 筆記的結論：linear classifier **太弱**，沒辦法好好處理不同顏色的車。
 
-CS231n 預告的解法是神經網路：hidden layer 的中間神經元可以分別偵測特定類型的車，例如朝左的綠車、朝前的藍車，下一層再把這些偵測器的結果加權組合，得到更準的 car 分數 [CS231n linear-classify "Interpreting a linear classifier"]。
+CS231n 預告的解法是神經網路：hidden layer 的中間神經元可以分別偵測特定類型的車，例如朝左的綠車、朝前的藍車，下一層再把這些偵測器的結果加權組合，得到更準的 car 分數 [CS231n linear-classify "Interpreting a linear classifier"]。詳見 [Neural Network](neural-network.md)：兩層神經網路就是 $s = W_2 \max(0, W_1 x)$，也就是兩層 linear classifier 中間夾一個非線性 [CS231n neural-networks-1 "Quick intro"]。反過來說，**一個 neuron 加上適當的 loss，就是一個 linear classifier** [CS231n neural-networks-1 "Single neuron as a linear classifier"]。
 
 ## 實作技巧
 

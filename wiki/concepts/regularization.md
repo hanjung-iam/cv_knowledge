@@ -2,7 +2,7 @@
 title: Regularization
 type: concept
 first_introduced: unknown
-aliases: [正規化（regularization）, 正則化, L2 regularization, regularization penalty, regularization strength]
+aliases: [正規化（regularization）, 正則化, L2 regularization, regularization penalty, regularization strength, weight decay]
 tags: [training, generalization, foundation]
 sources: [CS231n]
 related:
@@ -11,6 +11,8 @@ related:
   - concepts/softmax-cross-entropy.md
   - concepts/hyperparameter-tuning.md
   - concepts/convolutional-neural-network.md
+  - concepts/overfitting.md
+  - concepts/neural-network.md
 created: 2026-11-23
 updated: 2026-11-23
 ---
@@ -74,6 +76,13 @@ CS231n 認為這是 regularization **最吸引人的性質**：懲罰大權重�
 - 從機率的觀點來看，regularization 項可以解讀成 W 上的 **Gaussian prior**，整體變成 MAP 估計 [CS231n linear-classify "Softmax classifier"]，詳見 [Softmax／Cross-Entropy](softmax-cross-entropy.md)。
 - 加上 regularization 之後，loss **永遠不可能剛好是 0.0**，除非 W = 0 這種病態情況 [CS231n linear-classify "Multiclass Support Vector Machine loss"]。
 - $\lambda$ 會影響 Softmax 輸出「機率」的集中程度：$\lambda$ 越大，權重越小，「機率」越分散 [CS231n linear-classify "SVM vs. Softmax"]。
+
+### 神經網路中的 regularization
+
+- **控制 overfitting 的首選方法**：在神經網路中，regularization strength 是控制 overfitting 的首選方法，而不是縮小網路 [CS231n neural-networks-1 "Setting number of layers and their sizes"]。同樣 20 個 hidden neuron 的網路，$\lambda$ 從 0.001、0.01 到 0.1，決策區域越來越平滑 [CS231n neural-networks-1 "Setting number of layers and their sizes" 圖]。詳見 [Overfitting](overfitting.md)。
+- **Weight decay**：neural-networks-1 把「更高的 weight decay」當作「更強的 regularization」的例子 [CS231n neural-networks-1 "Summary"]。目前的來源沒有進一步說明 weight decay 和 L2 regularization 的確切關係。
+- **其他方法**：L2 regularization 之外，還有 dropout、input noise 等方法，CS231n 說之後會介紹 [CS231n neural-networks-1 "Setting number of layers and their sizes"]。目前的來源只提到名稱。
+- **生物的詮釋**：regularization 會在每次參數更新後把權重往 0 拉，可以解讀成「**逐漸遺忘**」（gradual forgetting）[CS231n neural-networks-1 "Single neuron as a linear classifier"]。
 
 ### 要不要 regularize bias？
 
