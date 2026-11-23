@@ -87,3 +87,13 @@
 - 修正：依使用者要求建立虛擬環境 `cv_wiki_env`，安裝 PyMuPDF；新增 `tools/pdf_tools.py`（info / text / render / images）。實測 render 可以看到 ResNet Fig. 1 的向量曲線。新增 `requirements.txt`。
 - 是否修改 workflow／schema：是。9.0 改成「每份 PDF 先跑 info，判斷文字能不能抽、圖是點陣還是向量，再決定讀法」；第 11 節說明 pdf_tools 和虛擬環境。
 - 反思：「先跑 info」就是把檢查提前。原本要等到讀內容時才發現讀不到，現在 ingest 的第一步就能知道這份 PDF 該怎麼讀。
+
+---
+
+## [2026-11-23] 讀取工具（linear-classify.pdf） | 換了存檔方式，文字可以抽取，但公式會無聲消失
+
+- 現象：使用者改用瀏覽器的「另存為 PDF」（producer：Skia/PDF）重新存了 linear-classify。`info` 顯示 17 頁、40,584 字元、7 張內嵌圖片，文字可以抽取。但和 md 比對後發現，**所有數學公式都從抽出的文字中消失了**，例如「images \( x_i \in R^D \), each associated with a label \( y_i \)」變成「images ␣, each associated with a label ␣」。md 裡有 36 行含行內公式、16 個獨立公式區塊，在 PDF 文字中全部遺失。用 render 把頁面畫出來，公式則可以正常看到。
+- 原因：網頁用 MathJax 把公式畫成圖形（SVG），存成 PDF 後，公式就不是文字了。
+- 修正：維持 md + PDF 的分工。公式以 md 的 LaTeX 為準，圖片與版面從 PDF 取得。
+- 是否修改 workflow／schema：是。9.0 補充「網頁筆記的公式以 md 為準」，以及建議用「另存為 PDF」存檔。
+- 反思：這是比「完全抽不出文字」更危險的錯誤。前者一看就知道有問題；這次是**文字看起來很完整，卻少了最關鍵的公式**，而且不會出現任何錯誤訊息。只看 `info` 的字元數會誤以為沒問題，必須**實際抽一段含公式的內容和 md 對照**才發現得了。對於以公式為核心的技術筆記，「抽得出文字」不等於「抽得出內容」。

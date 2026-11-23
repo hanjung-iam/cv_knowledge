@@ -33,3 +33,7 @@ Append-only 操作紀錄。格式：`## [YYYY-MM-DD] <type> | <title>`，type �
 - 虛擬環境 cv_wiki_env（PyMuPDF 2.1、pypdf 7.1.1），requirements.txt
 - tools/pdf_tools.py：info / text / render / images
 - schema 9.0：每份 PDF 先跑 info 再決定讀法
+
+## [2026-11-23] schema | 網頁筆記的公式以 md 為準
+- linear-classify.pdf 測試：Chrome「另存為 PDF」文字可抽取，但 MathJax 公式在抽出的文字中消失
+- 9.0 補充公式處理方式與建議的存檔方式
