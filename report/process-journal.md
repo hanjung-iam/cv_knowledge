@@ -75,3 +75,15 @@
   - 重跑 lint：0 error、0 warning。
 - 是否修改 workflow／schema：工具有修改，schema 沒有。
 - 反思：lint 的 warning 不能照單全收，也不能一律忽略，每一條都要判斷是「內容錯」還是「工具錯」。只修內容來讓 lint 安靜，可能是在遷就工具的缺陷；反過來，只改工具則可能掩蓋真正的問題。
+
+---
+
+## [2026-11-23] 讀取工具 | PDF 的兩種「看得到但讀不到」：向量外框文字與向量圖
+
+- 現象：
+  1. 使用者在 classification.pdf 裡看得到文字，但抽出來是 0 字元。用 PyMuPDF 診斷後發現 producer 是「Microsoft: Print To PDF」，頁面上沒有任何字型，第 1 頁卻有 1,320 個向量繪圖物件。也就是說，**文字被轉成了向量外框**：看起來是字，實際上是形狀。
+  2. ResNet 論文的文字抽得出來，但內嵌圖片是 0 張，因為論文的圖（訓練曲線、架構圖）是向量圖，抽「圖片」抽不到。
+- 原因：先前只用 pypdf 抽文字和內嵌圖片，沒有「把頁面畫成圖片」的能力。
+- 修正：依使用者要求建立虛擬環境 `cv_wiki_env`，安裝 PyMuPDF；新增 `tools/pdf_tools.py`（info / text / render / images）。實測 render 可以看到 ResNet Fig. 1 的向量曲線。新增 `requirements.txt`。
+- 是否修改 workflow／schema：是。9.0 改成「每份 PDF 先跑 info，判斷文字能不能抽、圖是點陣還是向量，再決定讀法」；第 11 節說明 pdf_tools 和虛擬環境。
+- 反思：「先跑 info」就是把檢查提前。原本要等到讀內容時才發現讀不到，現在 ingest 的第一步就能知道這份 PDF 該怎麼讀。

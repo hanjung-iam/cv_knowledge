@@ -1,0 +1,5 @@
+# cv_wiki_env 虛擬環境（只有 tools/pdf_tools.py 需要；lint.py、graph.py 只用標準函式庫）
+# 建立：python -m venv cv_wiki_env
+# 安裝：cv_wiki_env/Scripts/python -m pip install -r requirements.txt
+pymupdf==2.1
+pypdf==7.1.1

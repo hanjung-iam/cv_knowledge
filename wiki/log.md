@@ -28,3 +28,8 @@ Append-only 操作紀錄。格式：`## [YYYY-MM-DD] <type> | <title>`，type �
 - lint：首次 0 error / 16 warning → 修正內容 9 處、修正工具誤報 7 處 → 0 error / 0 warning
 - 檢查點 A：新增 datasets/、時效性規則；使用者改為補 PDF 取得圖片
 - 檢查點 B：通過
+
+## [2026-11-23] setup | 建立 cv_wiki_env 與 pdf_tools.py
+- 虛擬環境 cv_wiki_env（PyMuPDF 2.1、pypdf 7.1.1），requirements.txt
+- tools/pdf_tools.py：info / text / render / images
+- schema 9.0：每份 PDF 先跑 info 再決定讀法

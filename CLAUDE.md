@@ -310,9 +310,13 @@ lint 會統計還有幾個 `⚠️ **來源差異**` 沒有釐清。
 
 ### 9.0 讀取 raw 檔的方式
 
-- 同一份內容同時有 `.md` 和 `.pdf` 時：**文字以 `.md` 為準**（比較好解析），**圖片從 `.pdf` 取得**。兩個檔案都列進 `raw_path`。
-- PDF 的文字抽不出來時（例如以影像存檔），要在 source 頁的基本資訊註明。
+- 讀 PDF 一律用 `tools/pdf_tools.py`（在 `cv_wiki_env` 中執行，見第 11 節）。**每份 PDF 先跑 `info`**，確認文字能不能抽取、圖是點陣圖還是向量圖，再決定讀法。
+- **文字**：能抽取就用 `text`；抽不出來（例如「Microsoft: Print To PDF」會把文字轉成向量外框）時，改用同內容的 `.md`，或用 `render` 把頁面畫成圖片來讀。
+- **圖片**：點陣圖用 `images` 抽出；**向量圖**（論文的架構圖、訓練曲線常是向量圖）用 `render` 把整頁畫成圖片來看。論文的關鍵圖都要實際看過。
+- 同一份內容同時有 `.md` 和 `.pdf` 時：文字以 `.md` 為準，圖片從 `.pdf` 取得。兩個檔案都列進 `raw_path`。
+- PDF 的文字抽不出來時，要在 source 頁的基本資訊註明。
 - 圖片要實際看過才能引用；圖片裡的數字（例如曲線的數值範圍）只寫圖上直接看得到的，不推測實驗設定。
+- `pdf_tools.py` 的輸出放在專案外的暫存目錄，不放進 `wiki/` 或 `raw/`。
 - **不把來源的圖片複製到 `wiki/`**（版權考量）。需要時用文字描述圖片的內容；簡報需要示意圖時，用 SVG 自己重新繪製。
 
 ### 9.1 Ingest Loop（每份來源一次，逐篇進行）
@@ -403,7 +407,8 @@ lint 會統計還有幾個 `⚠️ **來源差異**` 沒有釐清。
 
 ## 11. 工具規格
 
-兩支腳本都只用 Python 標準函式庫，共用的解析邏輯（frontmatter、連結、引用）放在 `tools/wikilib.py`。
+`lint.py`、`graph.py` 只用 Python 標準函式庫，共用的解析邏輯（frontmatter、連結、引用）放在 `tools/wikilib.py`。
+`pdf_tools.py`（ingest 時讀 PDF 用）需要 PyMuPDF，在專案根目錄的虛擬環境 `cv_wiki_env` 中執行：`cv_wiki_env/Scripts/python tools/pdf_tools.py <info|text|render|images> …`。環境依 `requirements.txt` 建立，`cv_wiki_env/` 不納入 git。
 兩支都支援 `--root <dir>`，可以對測試用的假 Wiki 執行。**修改 lint 規則後，要先用一組故意放了錯誤的假 Wiki 測試，確認錯誤都抓得到、沒有誤報，才能用在真正的 Wiki 上。**
 
 ### `tools/lint.py`
