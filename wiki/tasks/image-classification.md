@@ -112,7 +112,7 @@ CS231n 也預告，後續課程的方法可以做到：
 
 更重要的是，它建立了之後的神經網路和 CNN 都沿用的框架：**score function**（像素 → 分數）加上 **[loss function](../concepts/loss-function.md)**（衡量分數好不好），再把學習變成「讓 loss 最小」的最佳化問題 [CS231n linear-classify "Linear Classification"]。
 
-但它還沒有真正「超越 raw pixel」：每個類別只有**一個模板**，所以朝左和朝右的馬會被混成一匹兩個頭的馬，各種顏色的車會被混成一輛紅色的車 [CS231n linear-classify "Interpreting a linear classifier"]。CS231n 預告，神經網路可以用多個中間神經元分別偵測不同類型的物體，再把它們組合起來 [CS231n linear-classify "Interpreting a linear classifier"]。
+但它還沒有真正「超越 raw pixel」：每個類別只有**一個模板**，所以朝左和朝右的馬會被混成一匹兩個頭的馬，各種顏色的車會被混成一輛紅色的車 [CS231n linear-classify "Interpreting a linear classifier"]。CS231n 預告，神經網路可以用多個中間 neuron 分別偵測不同類型的物體，再把它們組合起來 [CS231n linear-classify "Interpreting a linear classifier"]。
 
 ### 第三步：學習的閉環 — Optimization
 

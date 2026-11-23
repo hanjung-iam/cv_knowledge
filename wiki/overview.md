@@ -118,6 +118,6 @@ CS231n 的說法是：觀念上最難的部分已經過去了，**ConvNets 只�
 
 | | Classification | Detection | Segmentation |
 |---|---|---|---|
-| **方法** | kNN（baseline）→ Linear classifier → CNN | （待補） | （待補） |
+| **方法** | kNN（baseline）→ Linear classifier → Neural network → CNN | （待補） | （待補） |
 | **模型** | [AlexNet](models/alexnet.md) → [VGGNet](models/vggnet.md) | （待補） | （待補） |
 | **資料集** | [CIFAR-10](datasets/cifar-10.md)、[ILSVRC](datasets/ilsvrc.md) | （待補） | （待補） |

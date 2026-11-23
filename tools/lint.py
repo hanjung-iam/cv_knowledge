@@ -191,6 +191,70 @@ def _table_covered(units, first: int, last: int) -> bool:
     return False
 
 
+LEADIN_RE = re.compile(r"\]\s*[：:]\s*$")
+
+
+def _cited_leadin_items(units) -> set[int]:
+    """找出被引言引用涵蓋的清單項目（schema 第 6 節「引用的涵蓋範圍」）。
+
+    引言段落以「[引用]：」結尾時，緊接在後面、連續的清單項目都視為被這個引用涵蓋。
+    清單中斷（空段落、標題、表格）就停止。回傳被涵蓋的項目索引。
+    """
+    flagged: set[int] = set()
+    for i, (s, e, text, kind) in enumerate(units):
+        if kind != "para" or not LEADIN_RE.search(text) or not wl.find_citations(text):
+            continue
+        j, prev_end = i + 1, e
+        while j < len(units) and units[j][3] == "item" and units[j][0] - prev_end <= 2:
+            flagged.add(j)
+            prev_end = units[j][1]
+            j += 1
+    return flagged
+
+
+def check_cited_headings(root: Path, pages: list[wl.Page], r: Report):
+    """檢查教材類引用 [KEY 檔名 "小節標題"] 中的小節標題，是否真的存在於該檔案的 .md 原文。
+
+    標題可以是 Markdown 標題（# …），或粗體段落標題（**標題** 或 **標題.**）。
+    raw 檔不存在（例如在沒有 raw/ 的環境中執行）時只回報一次 info，不視為錯誤。
+    """
+    src_md: dict[str, dict[str, Path]] = {}
+    for p in pages:
+        k = (p.fm or {}).get("cite_key") if p.type == "source" else None
+        if isinstance(k, str) and k:
+            mds = [root / rp for rp in wl.as_list(p.fm.get("raw_path")) if rp.endswith(".md")]
+            src_md[k] = {m.stem: m for m in mds}
+    cache: dict[Path, list[str] | None] = {}
+    missing_raw = set()
+    for p in pages:
+        for ln, key, raw in p.cites:
+            files = src_md.get(key)
+            if not files:
+                continue
+            for part in raw.strip("[]").split(";"):
+                part = part.strip()
+                m = re.match(r"^" + re.escape(key) + r"\s+(?:(\S+)\s+)?\"([^\"]+)\"", part)
+                if not m:
+                    continue
+                stem, title = m.group(1), m.group(2)
+                path = files.get(stem) if stem else (next(iter(files.values())) if len(files) == 1 else None)
+                if path is None:
+                    r.add("warning", f"`{p.rel}:{ln}`：引用 `{part}` 找不到對應的原文檔案（檔名 `{stem}`）")
+                    continue
+                if path not in cache:
+                    cache[path] = path.read_text(encoding="utf-8").split("\n") if path.exists() else None
+                lines = cache[path]
+                if lines is None:
+                    missing_raw.add(path.relative_to(root).as_posix() if path.is_relative_to(root) else path.as_posix())
+                    continue
+                ok = any(re.match(r"^#+\s+" + re.escape(title) + r"\s*$", l.strip()) or ("**" + title) in l
+                         for l in lines)
+                if not ok:
+                    r.add("warning", f"`{p.rel}:{ln}`：引用的小節標題「{title}」在原文 `{path.name}` 中找不到")
+    for m in sorted(missing_raw):
+        r.add("info", f"無法核對引用的小節標題：`{m}` 不存在")
+
+
 def check_numbers(p: wl.Page, r: Report):
     units = _units(p)
     # 先找出每張表格（連續的 row），判斷整張表是否被前後段落的引用涵蓋
@@ -207,8 +271,9 @@ def check_numbers(p: wl.Page, r: Report):
             i = j + 1
         else:
             i += 1
+    covered_items = _cited_leadin_items(units)   # 被引言引用涵蓋的清單項目
     for idx, (ln, _, text, kind) in enumerate(units):
-        if idx in covered_rows:
+        if idx in covered_rows or idx in covered_items:
             continue
         has_cite = bool(wl.find_citations(text))
         cleaned = wl.CITE_RE.sub("", wl.LINK_RE.sub("", text))
@@ -320,6 +385,7 @@ def run(root: Path) -> tuple[Report, int]:
     check_index(pages, special, wiki_dir, r)
     check_orphans(pages, wiki_dir, r)
     check_raw(root, pages, r)
+    check_cited_headings(root, pages, r)
     check_conflicts(pages, r)
     return r, len(pages)
 

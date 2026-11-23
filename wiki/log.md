@@ -97,3 +97,9 @@ Append-only 操作紀錄。格式：`## [YYYY-MM-DD] <type> | <title>`，type �
 - lint：0 / 1 → 0 / 0；review：補 9 處連結
 - 檢查點 A：建立 overfitting 頁；ReLU 6 倍依圖說寫「和 tanh 相比」
 - 檢查點 B：通過
+
+## [2026-11-23] lint | 全域 Lint #2（6 份 ingest 之後）
+- 工具：lint 新增「引用的小節標題」檢查（結果 0 個問題）與清單引用模式處理；皆以假 Wiki 測試
+- schema：清單規則改為「引言行的引用涵蓋緊接的清單」（原本會產生 83 個 warning）
+- 修正：overview 兩軸地圖補上神經網路；CNN 頁、data-preprocessing 頁的過時敘述；統一 neuron 用語
+- 結果：lint 0 / 0；review 只剩 1 個已知誤報（kernel 同形異義）

@@ -25,13 +25,14 @@ updated: 2026-11-23
 
 原始像素值的範圍是 0～255。對人來說沒差，但對模型來說，數字的大小和偏移會直接影響訓練過程。
 
-這一頁整合了三篇 CS231n 筆記各自提到的前處理內容。它們從不同角度回答同一個問題：**為什麼要前處理？**
+這一頁整合了四篇 CS231n 筆記各自提到的前處理內容。它們從不同角度回答同一個問題：**為什麼要前處理？**
 
 | 筆記 | 角度 |
 |---|---|
 | classification | kNN 的實務建議：先把特徵正規化（normalization） |
 | linear-classify | 影像前處理的具體做法：mean subtraction 和縮放 |
 | optimization-2 | 從 backprop 的角度：**資料的尺度會影響 gradient 的大小** |
+| neural-networks-1 | 輸入一個 neuron 的資料都是正數時，權重的 gradient 會全部同號（zero-centering 的線索） |
 
 ## 技術細節
 
