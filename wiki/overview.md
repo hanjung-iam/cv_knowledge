@@ -45,7 +45,7 @@ updated: 2026-11-23
 
 ### 第三站：Score function + Loss function
 
-[Linear classifier](concepts/linear-classifier.md) 引入了之後所有模型都沿用的框架 [CS231n linear-classify "Linear Classification"]：
+[Linear classifier](concepts/linear-classifier.md) 引入了之後的神經網路和 CNN 都沿用的框架 [CS231n linear-classify "Linear Classification"]：
 
 1. **Score function**：把像素映射成類別分數。這裡是最簡單的 $f(x) = Wx + b$。
 2. **[Loss function](concepts/loss-function.md)**：衡量分數和標籤有多吻合。常見的有 SVM（hinge）loss 和 [Softmax（cross-entropy）loss](concepts/softmax-cross-entropy.md)，再加上 [regularization](concepts/regularization.md)，表示偏好小而分散的權重。
@@ -79,4 +79,4 @@ CS231n 的伏筆是：CNN 從像素映射到分數的方式和這裡完全一樣
 | | Classification | Detection | Segmentation |
 |---|---|---|---|
 | **方法** | kNN（baseline）→ Linear classifier | （待補） | （待補） |
-| **資料集** | CIFAR-10、ILSVRC | （待補） | （待補） |
+| **資料集** | [CIFAR-10](datasets/cifar-10.md)、[ILSVRC](datasets/ilsvrc.md) | （待補） | （待補） |

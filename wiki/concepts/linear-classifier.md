@@ -124,7 +124,7 @@ CS231n 預告的解法是神經網路：hidden layer 的中間神經元可以分
 
 ### 影像前處理：Mean subtraction（減去平均）
 
-前面的例子用的是原始像素值，範圍是 0～255。但在機器學習中，通常都會先對輸入特徵做正規化；對影像來說，每個像素就是一個特徵 [CS231n linear-classify "Interpreting a linear classifier"]：
+前面的例子用的是原始像素值，範圍是 0～255。但在機器學習中，通常都會先對輸入特徵做正規化（normalization）；對影像來說，每個像素就是一個特徵 [CS231n linear-classify "Interpreting a linear classifier"]：
 
 - **Centering（中心化）**：計算所有訓練影像的 **mean image（平均影像）**，再從每張影像減掉它，像素範圍大約變成 −127～127 [CS231n linear-classify "Interpreting a linear classifier"]。
 - **Scaling（縮放）**：再把每個特徵縮放到 −1～1 [CS231n linear-classify "Interpreting a linear classifier"]。

@@ -86,7 +86,7 @@ CS231n 的建議是，實務上幾乎都應該用 kNN，而不是 NN [CS231n cla
 
 CS231n 建議，如果真的要用 kNN（最好不是用在影像上，或只當作 baseline），步驟如下 [CS231n classification "Summary: Applying kNN in practice"]：
 
-1. 把特徵正規化成平均值 0、變異數 1。不過影像的像素通常分布相近，所以這一講沒有深入討論。
+1. 把特徵正規化（normalization）成平均值 0、變異數 1。不過影像的像素通常分布相近，所以這一講沒有深入討論。
 2. 維度很高時，考慮先降維，例如 PCA、NCA、Random Projections。
 3. 把資料隨機切成 train 和 val，必要時改用 cross-validation。
 4. 在 validation data 上嘗試多種 k 和距離（L1、L2）。

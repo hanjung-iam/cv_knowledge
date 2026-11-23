@@ -100,7 +100,7 @@ $\max(x, y)$ 在 $x = y$ 的地方有一個「折角」（kink），嚴格來說
 
 | | SVM | Softmax |
 |---|---|---|
-| 怎麼看分數 | 類別分數，沒有校準過 | 未正規化的 log 機率 |
+| 怎麼看分數 | 類別分數，沒有校準過 | 未正規化（unnormalized）的 log 機率 |
 | Loss | hinge loss（max-margin loss） | cross-entropy loss |
 | 什麼時候滿意 | margin 達標就滿意，不再管細節 | **永遠不滿足**：正確類別的機率永遠可以再高一點 |
 | 輸出能否解讀 | 分數本身不容易解讀 | 可以得到「機率」，但有引號，詳見 Softmax 頁 |

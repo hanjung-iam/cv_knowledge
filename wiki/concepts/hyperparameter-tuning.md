@@ -72,7 +72,7 @@ updated: 2026-11-23
 
 ### 不是每個 hyperparameter 都需要調
 
-Linear classifier 有兩個看起來都需要調的 hyperparameter：
+[Linear classifier](linear-classifier.md) 有兩個看起來都需要調的 hyperparameter：
 
 - **Regularization strength $\lambda$**：沒有簡單的設定方式，通常用 cross-validation 決定 [CS231n linear-classify "Multiclass Support Vector Machine loss"]。詳見 [Regularization](regularization.md)。
 - **SVM 的 margin $\Delta$**：可以直接設成 1.0，**不需要** cross-validation。因為 $\Delta$ 和 $\lambda$ 控制的其實是同一個取捨，W 可以任意縮放分數的差距 [CS231n linear-classify "Practical Considerations"]。詳見 [Loss Function](loss-function.md)。
@@ -92,7 +92,7 @@ Linear classifier 有兩個看起來都需要調的 hyperparameter：
 - [Regularization](regularization.md)：用來選擇 $\lambda$
 - [Gradient Descent](gradient-descent.md)：learning rate、batch size
 - [Image Classification](../tasks/image-classification.md)：所有分類方法的評估流程都適用
-- 之後所有深度學習模型的 learning rate、層數等 hyperparameter，也遵循同樣的原則（綜合推論，依據 [CS231n classification "Validation sets for Hyperparameter tuning"]：原文說 hyperparameter「come up very often in the design of many Machine Learning algorithms」）
+- 其他機器學習方法：hyperparameter 在許多機器學習演算法中都很常見 [CS231n classification "Validation sets for Hyperparameter tuning"]，大部分都要用 validation set 來調。但**不是每一個都需要**：例如 SVM 的 $\Delta$ 可以固定成 1.0，batch size 通常也不用 cross-validation 來選，見上方「不是每個 hyperparameter 都需要調」和「訓練時的 hyperparameter」兩節 [CS231n linear-classify "Practical Considerations"; CS231n optimization-1 "Gradient Descent"]。
 
 ## 常見誤解
 

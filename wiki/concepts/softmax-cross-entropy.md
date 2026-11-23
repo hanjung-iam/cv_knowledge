@@ -35,11 +35,11 @@ $$
 f_j(z) = \frac{e^{z_j}}{\sum_k e^{z_k}}
 $$
 
-把任意實數組成的分數向量 $z$，「壓縮」成一個每個值都在 0 和 1 之間、而且加總為 1 的向量 [CS231n linear-classify "Softmax classifier"]。步驟就是**先取指數，再正規化** [CS231n linear-classify "SVM vs. Softmax"]。
+把任意實數組成的分數向量 $z$，「壓縮」成一個每個值都在 0 和 1 之間、而且加總為 1 的向量 [CS231n linear-classify "Softmax classifier"]。步驟就是**先取指數，再正規化（normalize）** [CS231n linear-classify "SVM vs. Softmax"]。
 
 ### Cross-entropy loss
 
-score function 和 [linear classifier](linear-classifier.md) 一樣是 $f(x_i; W) = W x_i$，但分數被解讀成**每個類別未正規化的 log 機率**，loss 改用 cross-entropy [CS231n linear-classify "Softmax classifier"]：
+score function 和 [linear classifier](linear-classifier.md) 一樣是 $f(x_i; W) = W x_i$，但分數被解讀成**每個類別未正規化（unnormalized）的 log 機率**，loss 改用 cross-entropy [CS231n linear-classify "Softmax classifier"]：
 
 $$
 L_i = -\log\left(\frac{e^{f_{y_i}}}{\sum_j e^{f_j}}\right) \quad\text{或等價地}\quad L_i = -f_{y_i} + \log\sum_j e^{f_j}
@@ -47,7 +47,7 @@ $$
 
 白話解釋：先用 softmax 算出正確類別 $y_i$ 的機率，再取負對數。完整的 loss 和 SVM 一樣，是所有樣本 $L_i$ 的平均，加上 regularization 項 $R(W)$ [CS231n linear-classify "Softmax classifier"]。
 
-**範例**：筆記的對照圖中，分數 (−2.85, 0.86, 0.28) 取指數後是 (0.058, 2.36, 1.32)，正規化後是 (0.016, 0.631, 0.353)。正確類別是第三類，所以 loss = −log(0.353) = 1.04 [CS231n linear-classify "SVM vs. Softmax" 圖]。
+**範例**：筆記的對照圖中，分數 (−2.85, 0.86, 0.28) 取指數後是 (0.058, 2.36, 1.32)，正規化（normalize）後是 (0.016, 0.631, 0.353)。正確類別是第三類，所以 loss = −log(0.353) = 1.04 [CS231n linear-classify "SVM vs. Softmax" 圖]。
 
 ### 為什麼是這個形式：兩種詮釋
 
@@ -73,7 +73,7 @@ $$
 
 Softmax 的輸出看起來像機率，但它們**有多集中或多分散，直接取決於 regularization 強度 $\lambda$** [CS231n linear-classify "SVM vs. Softmax"]。
 
-| 分數 | 取指數 | 正規化後的「機率」 |
+| 分數 | 取指數 | 正規化（normalize）後的「機率」 |
 |---|---|---|
 | (1, −2, 0) | (2.71, 0.14, 1) | (0.7, 0.04, 0.26) |
 | (0.5, −1, 0)：權重減半 | (1.65, 0.37, 1) | (0.55, 0.12, 0.33)：變得更分散 |

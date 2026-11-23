@@ -61,7 +61,7 @@ $$
 - 數學上 h 要趨近於 0，實務上用一個很小的值就夠了，例如範例中的 1e-5。理想上，要選「不會造成數值問題的最小值」。
 - 實務上，改用 **centered difference formula** $[f(x+h) - f(x-h)] / 2h$ 通常效果更好。
 
-**Numerical gradient 為什麼不夠用**：它的計算量和參數數量成正比。CIFAR-10 的 linear classifier 有 30,730 個參數，所以**光是為了更新一步**，就要評估 30,731 次 loss。而現代神經網路動輒有數千萬個參數，這個方法根本無法擴展 [CS231n optimization-1 "Computing the gradient numerically with finite differences"]。
+**Numerical gradient 為什麼不夠用**：它的計算量和參數數量成正比。[CIFAR-10](../datasets/cifar-10.md) 的 [linear classifier](linear-classifier.md) 有 30,730 個參數，所以**光是為了更新一步**，就要評估 30,731 次 loss。而現代神經網路動輒有數千萬個參數，這個方法根本無法擴展 [CS231n optimization-1 "Computing the gradient numerically with finite differences"]。
 
 **Analytic gradient 的範例**：對單一樣本的 SVM loss 求 gradient [CS231n optimization-1 "Computing the gradient analytically with Calculus"]：
 
@@ -128,7 +128,7 @@ batch size 是 hyperparameter，但**通常不用 cross-validation 來選**，�
 
 - 資料 $(x_i, y_i)$ 是固定的；權重 $W$ 從隨機值開始，會被更新。
 - **Forward pass**：score function 算出分數 $f(x_i, W)$。
-- **Loss**：data loss 比較分數和標籤 $y_i$；regularization loss 只看 $W$。兩者相加得到 $L$。
+- **Loss**：[data loss](loss-function.md) 比較分數和標籤 $y_i$；[regularization](regularization.md) loss 只看 $W$。兩者相加得到 $L$。
 - **Gradient descent**：算出 $L$ 對 $W$ 的 gradient，用它來更新參數。
 
 ## 下一步：Backpropagation

@@ -2,7 +2,7 @@
 title: Regularization
 type: concept
 first_introduced: unknown
-aliases: [正規化, 正則化, L2 regularization, regularization penalty, regularization strength]
+aliases: [正規化（regularization）, 正則化, L2 regularization, regularization penalty, regularization strength]
 tags: [training, generalization, foundation]
 sources: [CS231n]
 related:
@@ -15,6 +15,8 @@ updated: 2026-11-23
 ---
 
 # Regularization（正規化）
+
+> **用語提醒**：本 Wiki 中「正規化」可能指 **regularization**（本頁）或 **normalization**（例如資料前處理、softmax 的歸一化）。為了區分，「正規化」出現時一律附上英文。
 
 ## 一句話說明
 

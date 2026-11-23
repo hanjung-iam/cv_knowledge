@@ -56,7 +56,7 @@ CS231n 列出的難點如下。它強調這份清單並不完整 [CS231n classif
 
 （示意圖的描述依據 [CS231n classification "Image Classification" 圖]。）
 
-一個好的分類模型，必須**對這些變化的各種組合都保持不變（invariant）**，同時**對不同類別之間的差異保持敏感** [CS231n classification "Image Classification"]。這兩個要求之間的拉扯，是理解後面所有模型設計的關鍵。
+一個好的分類模型，必須**對這些變化的各種組合都保持不變（invariant）**，同時**對不同類別之間的差異保持敏感** [CS231n classification "Image Classification"]。
 
 ## 解法的思路：Data-driven Approach（資料驅動方法）
 
@@ -81,7 +81,7 @@ CS231n 列出的難點如下。它強調這份清單並不完整 [CS231n classif
 |---|---|---|---|
 | Nearest Neighbor（L1 距離） | 找訓練集中最像的那張圖，直接沿用它的標籤 | 38.6% [CS231n classification "Nearest Neighbor Classifier"] | [k-Nearest Neighbor](../concepts/k-nearest-neighbor.md) |
 | Nearest Neighbor（L2 距離） | 同上，換成歐氏距離 | 35.4% [CS231n classification "Nearest Neighbor Classifier"] | [k-Nearest Neighbor](../concepts/k-nearest-neighbor.md) |
-| Linear classifier（SVM／Softmax loss） | 學出一組權重 W，每個類別一個「模板」，分數 = Wx + b | 用 random search 訓練：約 15.5%；用 random local search 訓練：21.4%（只反映很差的最佳化方法）[CS231n optimization-1 "Strategy #1: A first very bad idea solution: Random search"; CS231n optimization-1 "Strategy #2: Random Local Search"] | [Linear Classifier](../concepts/linear-classifier.md) |
+| Linear classifier（SVM loss） | 學出一組權重 W，每個類別一個「模板」，分數 = Wx + b | 用 random search 訓練：約 15.5%；用 random local search 訓練：21.4%（只反映很差的最佳化方法）[CS231n optimization-1 "Strategy #1: A first very bad idea solution: Random search"; CS231n optimization-1 "Strategy #2: Random Local Search"] | [Linear Classifier](../concepts/linear-classifier.md) |
 
 參考線：
 
@@ -89,7 +89,7 @@ CS231n 列出的難點如下。它強調這份清單並不完整 [CS231n classif
 - 人類：估計約 94% [CS231n classification "Nearest Neighbor Classifier"]
 - （截至 CS231n 筆記撰寫時）state-of-the-art CNN：約 95%，與人類相當 [CS231n classification "Nearest Neighbor Classifier"]
 
-### 下一步：為什麼需要超越 raw pixel
+### 第一步：kNN 的教訓 — 必須超越 raw pixel
 
 kNN 的失敗點出了這個領域的核心問題：直接比較像素，反映的是**背景和顏色分布**，而不是物體**是什麼**。例如狗和青蛙，只因為都在白色背景上，就被判定為相近 [CS231n classification "Pros and Cons of Nearest Neighbor classifier"]。CS231n 的結論是：要讓同一類別的影像聚在一起、不受背景等無關因素影響，就**必須超越 raw pixel** [CS231n classification "Pros and Cons of Nearest Neighbor classifier"]。
 
@@ -104,7 +104,7 @@ CS231n 也預告，後續課程的方法可以做到：
 - 學完參數之後就可以**丟掉訓練資料**，不用把整個 training set 留在身邊。
 - 預測一張圖只需要**一次矩陣乘法**，不用跟每張訓練圖片比對。
 
-更重要的是，它建立了之後所有模型都沿用的框架：**score function**（像素 → 分數）加上 **[loss function](../concepts/loss-function.md)**（衡量分數好不好），再把學習變成「讓 loss 最小」的最佳化問題 [CS231n linear-classify "Linear Classification"]。
+更重要的是，它建立了之後的神經網路和 CNN 都沿用的框架：**score function**（像素 → 分數）加上 **[loss function](../concepts/loss-function.md)**（衡量分數好不好），再把學習變成「讓 loss 最小」的最佳化問題 [CS231n linear-classify "Linear Classification"]。
 
 但它還沒有真正「超越 raw pixel」：每個類別只有**一個模板**，所以朝左和朝右的馬會被混成一匹兩個頭的馬，各種顏色的車會被混成一輛紅色的車 [CS231n linear-classify "Interpreting a linear classifier"]。CS231n 預告，神經網路可以用多個中間神經元分別偵測不同類型的物體，再把它們組合起來 [CS231n linear-classify "Interpreting a linear classifier"]。
 
@@ -121,5 +121,7 @@ CS231n 也預告，後續課程的方法可以做到：
 - [k-Nearest Neighbor](../concepts/k-nearest-neighbor.md)：第一個 baseline
 - [Linear Classifier](../concepts/linear-classifier.md)：第一個 parametric 方法
 - [Loss Function](../concepts/loss-function.md)、[Softmax／Cross-Entropy](../concepts/softmax-cross-entropy.md)、[Regularization](../concepts/regularization.md)：訓練用的框架
+- [Optimization](../concepts/optimization.md)、[Gradient Descent](../concepts/gradient-descent.md)：如何找到好的參數
 - [Hyperparameter Tuning](../concepts/hyperparameter-tuning.md)：如何正確地調整與評估
 - [CIFAR-10](../datasets/cifar-10.md)：入門常用的資料集
+- [ILSVRC](../datasets/ilsvrc.md)：大規模的資料集

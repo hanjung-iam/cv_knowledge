@@ -229,6 +229,25 @@ def check_time_sensitive(p: wl.Page, r: Report):
             r.add("warning", f"`{p.rel}:{ln}`：含時效性字眼「{m.group(0)}」但沒有標 `（截至 …）`")
 
 
+# 有歧義的中文術語：出現時必須附上英文，例如「正規化（normalization）」或「Regularization（正規化）」。
+# 以「」括起來的（談論這個詞本身）不檢查。
+AMBIGUOUS_TERMS = ["正規化"]
+
+
+def check_ambiguous_terms(p: wl.Page, r: Report):
+    for i, line in p.lines:
+        for term in AMBIGUOUS_TERMS:
+            for m in re.finditer(re.escape(term), line):
+                before, after = line[:m.start()], line[m.end():]
+                ok = (
+                    re.match(r"（[A-Za-z]", after)                   # 正規化（normalization）
+                    or (re.search(r"[A-Za-z]+（$", before) and after.startswith("）"))  # Regularization（正規化）
+                    or (before.endswith("「") and after.startswith("」"))  # 「正規化」：談論這個詞
+                )
+                if not ok:
+                    r.add("warning", f"`{p.rel}:{i + p.body_offset}`：「{term}」有歧義，請附上英文（regularization 或 normalization）")
+
+
 def check_index(pages: list[wl.Page], special: dict, wiki_dir: Path, r: Report):
     idx = special.get("index.md")
     if idx is None:
@@ -297,6 +316,7 @@ def run(root: Path) -> tuple[Report, int]:
         check_citations(p, keys, r)
         check_numbers(p, r)
         check_time_sensitive(p, r)
+        check_ambiguous_terms(p, r)
     check_index(pages, special, wiki_dir, r)
     check_orphans(pages, wiki_dir, r)
     check_raw(root, pages, r)

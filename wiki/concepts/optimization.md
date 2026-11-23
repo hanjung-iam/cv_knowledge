@@ -32,7 +32,7 @@ CS231n 用一個比喻貫穿整個最佳化過程：**你被蒙上眼睛，站�
 
 - 你站的位置，就是目前的參數 W。
 - 腳下的高度，就是這組參數的 loss。
-- 在 CIFAR-10 上，這片丘陵是 **30,730 維**的，因為 W 的大小是 10 × 3073。
+- 在 [CIFAR-10](../datasets/cifar-10.md) 上，這片丘陵是 **30,730 維**的，因為 W 的大小是 10 × 3073。
 
 CS231n 也預告：之後把 score function 換成神經網路、CNN 的時候，**loss function 和最佳化的過程大致不變**，換掉的只有第一個元件 [CS231n optimization-1 "Introduction"]。
 
@@ -42,7 +42,7 @@ CS231n 也預告：之後把 score function 換成神經網路、CNN 的時候�
 
 W 有 30,730 個參數，沒辦法直接畫出來。但可以從某個隨機的 W 出發，沿著一個隨機方向 $W_1$ 切一刀，畫出 $L(W + aW_1)$ 隨 $a$ 變化的曲線；或者沿著兩個方向切一個平面，畫出 $L(W + aW_1 + bW_2)$，用顏色表示 loss 的高低 [CS231n optimization-1 "Visualizing the loss function"]。
 
-筆記在 CIFAR-10 上畫出 Multiclass SVM loss（沒有 regularization）的地形 [CS231n optimization-1 "Visualizing the loss function" 圖]：
+筆記在 CIFAR-10 上畫出 Multiclass SVM loss（沒有 [regularization](regularization.md)）的地形 [CS231n optimization-1 "Visualizing the loss function" 圖]：
 
 - **只看一個樣本**：一維切面是由幾段直線組成的折線；二維切面也看得出分段線性的結構。
 - **平均 100 個樣本**：二維切面變成一個平滑的**碗**，中間藍色（loss 低）、四周紅色（loss 高）。

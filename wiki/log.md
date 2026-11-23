@@ -60,3 +60,11 @@ Append-only 操作紀錄。格式：`## [YYYY-MM-DD] <type> | <title>`，type �
 - lint：第一輪即 0 error / 0 warning
 - 檢查點 A：拆兩頁；Wiki 統一用 λ（註明 α）；ILSVRC 先建頁
 - 檢查點 B：通過
+
+## [2026-11-23] lint | 全域 Lint #1（3 份 ingest 之後）
+- lint.py：0 / 0；新工具 review.py 列出跨頁數字、未連結的提及等線索
+- 修正：「正規化」一律附英文（9 處）；過度概括 3 處；過時推論 1 處；表格條件 1 處；小節標題與連結；漏掉的連結 8 處
+- 結構：sources/cs231n.md 改為依筆記分區
+- 工具：lint 新增歧義術語檢查；新增 tools/review.py
+- schema：第 4、8.1、9.3、11 節
+- 暫不新增頁面：neural network／CNN（來源尚未介紹）、overfitting、資料前處理
