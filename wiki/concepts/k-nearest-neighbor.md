@@ -9,8 +9,9 @@ related:
   - tasks/image-classification.md
   - concepts/hyperparameter-tuning.md
   - datasets/cifar-10.md
+  - concepts/linear-classifier.md
 created: 2026-11-22
-updated: 2026-11-22
+updated: 2026-11-23
 ---
 
 # k-Nearest Neighbor（kNN，k-近鄰分類器）
@@ -36,10 +37,10 @@ CS231n 用它當作第一個方法，原因不是它好用。筆記直接說它�
 
 ### 距離怎麼算：L1 與 L2
 
-把兩張影像都攤平成向量 \(I_1, I_2\)，逐個像素相減：
+把兩張影像都攤平成向量 $I_1, I_2$，逐個像素相減：
 
-- **L1 距離**：\(d_1(I_1, I_2) = \sum_p |I_1^p - I_2^p|\)。也就是把每個像素差的絕對值全部加起來。兩張圖完全一樣時，結果是 0；差異越大，數字越大 [CS231n classification "Nearest Neighbor Classifier"]。
-- **L2 距離**：\(d_2(I_1, I_2) = \sqrt{\sum_p (I_1^p - I_2^p)^2}\)。也就是幾何上的歐氏距離 [CS231n classification "Nearest Neighbor Classifier"]。
+- **L1 距離**：$d_1(I_1, I_2) = \sum_p |I_1^p - I_2^p|$。也就是把每個像素差的絕對值全部加起來。兩張圖完全一樣時，結果是 0；差異越大，數字越大 [CS231n classification "Nearest Neighbor Classifier"]。
+- **L2 距離**：$d_2(I_1, I_2) = \sqrt{\sum_p (I_1^p - I_2^p)^2}$。也就是幾何上的歐氏距離 [CS231n classification "Nearest Neighbor Classifier"]。
   - 實際使用時可以省略開根號。開根號是單調函數，不會改變距離的大小順序，所以找到的最近鄰居還是一樣 [CS231n classification "Nearest Neighbor Classifier"]。
 
 **L1 與 L2 的差別**：L2 對差異「更不寬容」。它寧可接受很多個中等的差異，也不願意接受一個很大的差異，因為差異被平方之後，大的差異會被放大。L1 和 L2 都是 p-norm 的特例 [CS231n classification "Nearest Neighbor Classifier"]。
@@ -91,6 +92,12 @@ CS231n 建議，如果真的要用 kNN（最好不是用在影像上，或只當
 4. 在 validation data 上嘗試多種 k 和距離（L1、L2）。
 5. 太慢的話，改用 ANN 函式庫。
 6. 記下最好的 hyperparameter，最後在 test set 上評估一次並回報結果。
+
+## 和 Linear Classifier 的關係
+
+[Linear classifier](linear-classifier.md) 可以看成 kNN 的「壓縮版」：它**仍然是在做 Nearest Neighbor**，只是每個類別只保留**一張學出來的模板**，而不是幾千張訓練圖片，距離也改用（負的）內積 [CS231n linear-classify "Interpreting a linear classifier"]。
+
+這解決了 kNN 的兩個缺點：要存全部訓練資料，以及預測時要逐一比對 [CS231n linear-classify "Linear Classification"]。
 
 ## 出現在哪些地方
 

@@ -9,8 +9,10 @@ related:
   - concepts/k-nearest-neighbor.md
   - tasks/image-classification.md
   - datasets/cifar-10.md
+  - concepts/regularization.md
+  - concepts/loss-function.md
 created: 2026-11-22
-updated: 2026-11-22
+updated: 2026-11-23
 ---
 
 # Hyperparameter Tuning（超參數調整）與資料切分
@@ -67,9 +69,21 @@ updated: 2026-11-22
   - 兩段的共同點是：hyperparameter 越多，validation set 應該越大；validation set 太小時（例如只有幾百筆），改用 cross-validation 比較安全 [CS231n classification "Validation sets for Hyperparameter tuning"]。
 - 調整完之後，要不要把 validation data 併回去重新訓練？CS231n 認為比較乾淨的做法是不併回，把 validation data 視為已經「燒掉」了 [CS231n classification "Summary: Applying kNN in practice"]。
 
+### 不是每個 hyperparameter 都需要調
+
+Linear classifier 有兩個看起來都需要調的 hyperparameter：
+
+- **Regularization strength $\lambda$**：沒有簡單的設定方式，通常用 cross-validation 決定 [CS231n linear-classify "Multiclass Support Vector Machine loss"]。詳見 [Regularization](regularization.md)。
+- **SVM 的 margin $\Delta$**：可以直接設成 1.0，**不需要** cross-validation。因為 $\Delta$ 和 $\lambda$ 控制的其實是同一個取捨，W 可以任意縮放分數的差距 [CS231n linear-classify "Practical Considerations"]。詳見 [Loss Function](loss-function.md)。
+
+另外，「要用 hinge loss 還是 squared hinge loss」這種**方法上的選擇**，也可以用 cross-validation 決定 [CS231n linear-classify "Multiclass Support Vector Machine loss"]。
+
+這說明了一件事：先理解 hyperparameter 之間的關係，可以減少需要搜尋的組合（綜合推論，依據 [CS231n linear-classify "Practical Considerations"]）。
+
 ## 出現在哪些地方
 
 - [k-Nearest Neighbor](k-nearest-neighbor.md)：用來選擇 k 和距離函數
+- [Regularization](regularization.md)：用來選擇 $\lambda$
 - [Image Classification](../tasks/image-classification.md)：所有分類方法的評估流程都適用
 - 之後所有深度學習模型的 learning rate、層數等 hyperparameter，也遵循同樣的原則（綜合推論，依據 [CS231n classification "Validation sets for Hyperparameter tuning"]：原文說 hyperparameter「come up very often in the design of many Machine Learning algorithms」）
 

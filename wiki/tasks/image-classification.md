@@ -7,10 +7,12 @@ tags: [task, core-problem]
 sources: [CS231n]
 related:
   - concepts/k-nearest-neighbor.md
+  - concepts/linear-classifier.md
+  - concepts/loss-function.md
   - concepts/hyperparameter-tuning.md
   - datasets/cifar-10.md
 created: 2026-11-22
-updated: 2026-11-22
+updated: 2026-11-23
 ---
 
 # Image Classification（影像分類）
@@ -71,12 +73,13 @@ CS231n 列出的難點如下。它強調這份清單並不完整 [CS231n classif
 
 ## 方法演進
 
-目前 Wiki 只收錄了最早的 baseline，之後隨著來源增加會持續補充。
+之後隨著來源增加會持續補充。
 
 | 方法 | 核心想法 | CIFAR-10 accuracy | 頁面 |
 |---|---|---|---|
 | Nearest Neighbor（L1 距離） | 找訓練集中最像的那張圖，直接沿用它的標籤 | 38.6% [CS231n classification "Nearest Neighbor Classifier"] | [k-Nearest Neighbor](../concepts/k-nearest-neighbor.md) |
 | Nearest Neighbor（L2 距離） | 同上，換成歐氏距離 | 35.4% [CS231n classification "Nearest Neighbor Classifier"] | [k-Nearest Neighbor](../concepts/k-nearest-neighbor.md) |
+| Linear classifier（SVM／Softmax loss） | 學出一組權重 W，每個類別一個「模板」，分數 = Wx + b | 來源未提供 | [Linear Classifier](../concepts/linear-classifier.md) |
 
 參考線：
 
@@ -93,10 +96,22 @@ CS231n 也預告，後續課程的方法可以做到：
 - 學完之後就可以丟掉 training set [CS231n classification "Summary"]
 - 每張測試影像不到一毫秒就能分類完 [CS231n classification "Summary"]
 
-這些方法（線性分類器、神經網路、CNN）會在之後 ingest 對應來源時補進這一節。
+### 第二步：Parametric approach — Linear classifier
+
+[Linear classifier](../concepts/linear-classifier.md) 先解決了 kNN 的兩個實務問題 [CS231n linear-classify "Summary"]：
+- 學完參數之後就可以**丟掉訓練資料**，不用把整個 training set 留在身邊。
+- 預測一張圖只需要**一次矩陣乘法**，不用跟每張訓練圖片比對。
+
+更重要的是，它建立了之後所有模型都沿用的框架：**score function**（像素 → 分數）加上 **[loss function](../concepts/loss-function.md)**（衡量分數好不好），再把學習變成「讓 loss 最小」的最佳化問題 [CS231n linear-classify "Linear Classification"]。
+
+但它還沒有真正「超越 raw pixel」：每個類別只有**一個模板**，所以朝左和朝右的馬會被混成一匹兩個頭的馬，各種顏色的車會被混成一輛紅色的車 [CS231n linear-classify "Interpreting a linear classifier"]。CS231n 預告，神經網路可以用多個中間神經元分別偵測不同類型的物體，再把它們組合起來 [CS231n linear-classify "Interpreting a linear classifier"]。
+
+最佳化（怎麼找到讓 loss 最小的 W）、神經網路和 CNN，會在之後 ingest 對應來源時補進這一節。
 
 ## 相關概念
 
 - [k-Nearest Neighbor](../concepts/k-nearest-neighbor.md)：第一個 baseline
+- [Linear Classifier](../concepts/linear-classifier.md)：第一個 parametric 方法
+- [Loss Function](../concepts/loss-function.md)、[Softmax／Cross-Entropy](../concepts/softmax-cross-entropy.md)、[Regularization](../concepts/regularization.md)：訓練用的框架
 - [Hyperparameter Tuning](../concepts/hyperparameter-tuning.md)：如何正確地調整與評估
 - [CIFAR-10](../datasets/cifar-10.md)：入門常用的資料集

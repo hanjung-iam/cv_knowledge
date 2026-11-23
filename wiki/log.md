@@ -37,3 +37,17 @@ Append-only 操作紀錄。格式：`## [YYYY-MM-DD] <type> | <title>`，type �
 ## [2026-11-23] schema | 網頁筆記的公式以 md 為準
 - linear-classify.pdf 測試：Chrome「另存為 PDF」文字可抽取，但 MathJax 公式在抽出的文字中消失
 - 9.0 補充公式處理方式與建議的存檔方式
+
+## [2026-11-23] ingest | CS231n — linear-classify
+- 新增：concepts/linear-classifier.md, concepts/loss-function.md, concepts/softmax-cross-entropy.md, concepts/regularization.md
+- 更新：tasks/image-classification.md, concepts/k-nearest-neighbor.md, concepts/hyperparameter-tuning.md, datasets/cifar-10.md, overview.md, sources/cs231n.md, index.md
+- 數字核對：33 項對照原文全部吻合；驗算圖中數字，發現原文 ship score 61.95 應為 60.75（標綜合推論）
+- 自查：移除 2 個來源沒有的 aliases
+- lint：0 error / 9 warning → 補引用 1、改寫 1、新增表格引用規則並修改 lint（7）→ 0 / 0
+- 檢查點 A：4 個概念頁；驗算結果標綜合推論；前處理放 linear-classifier
+- 檢查點 B：通過
+
+## [2026-11-23] schema | 公式標記、frontmatter 不得編造、引用涵蓋範圍
+- 第 4 節：公式用 $…$；避免方括號括住英文開頭內容
+- 第 5 節：aliases 等 frontmatter 欄位也須有來源支持
+- 第 6 節：段落／清單／表格的引用涵蓋規則；lint 相應修改並以假 Wiki 測試

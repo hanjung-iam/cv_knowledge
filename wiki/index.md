@@ -4,7 +4,7 @@ Computer Vision 知識庫總目錄。每次 ingest 或新增頁面時更新。
 
 ## Overview
 
-- [Overview — Computer Vision 的演進主線](overview.md) — Wiki 入口：從比對像素到學習表示（sources: 1）
+- [Overview — Computer Vision 的演進主線](overview.md) — Wiki 入口：從比對像素、學習參數，到學習表示（sources: 1）
 
 ## Models
 
@@ -17,7 +17,11 @@ Computer Vision 知識庫總目錄。每次 ingest 或新增頁面時更新。
 ## Concepts
 
 - [k-Nearest Neighbor (kNN)](concepts/k-nearest-neighbor.md) — 第一個 baseline；L1/L2 距離；pixel 距離不等於語意（sources: 1）
-- [Hyperparameter Tuning](concepts/hyperparameter-tuning.md) — validation set、cross-validation、test set 只用一次（sources: 1）
+- [Linear Classifier](concepts/linear-classifier.md) — score function Wx + b；加權總和、幾何、template matching 三種理解；一類一個模板的極限（sources: 1）
+- [Loss Function](concepts/loss-function.md) — data loss + regularization loss；Multiclass SVM（hinge）loss；SVM vs Softmax（sources: 1）
+- [Softmax and Cross-Entropy Loss](concepts/softmax-cross-entropy.md) — 分數轉「機率」；資訊理論與 MLE 詮釋；數值穩定（sources: 1）
+- [Regularization](concepts/regularization.md) — L2 penalty；消除 W 的不唯一性；小而分散的權重泛化較好（sources: 1）
+- [Hyperparameter Tuning](concepts/hyperparameter-tuning.md) — validation set、cross-validation、test set 只用一次；λ 要調、Δ 不用調（sources: 1）
 
 ## Datasets
 
@@ -31,4 +35,4 @@ Computer Vision 知識庫總目錄。每次 ingest 或新增頁面時更新。
 
 | cite key | 頁面 | 說明 |
 |---|---|---|
-| `CS231n` | [CS231n 課程筆記](sources/cs231n.md) | Stanford CS231n 課程筆記（已 ingest：classification） |
+| `CS231n` | [CS231n 課程筆記](sources/cs231n.md) | Stanford CS231n 課程筆記（已 ingest：classification、linear-classify） |
