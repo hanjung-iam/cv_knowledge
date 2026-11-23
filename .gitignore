@@ -12,3 +12,6 @@ Thumbs.db
 
 # Python 虛擬環境
 cv_wiki_env/
+
+# 簡報模板：有版權，PDF 屬性資料含作者個資，不納入版本控制
+assets/
