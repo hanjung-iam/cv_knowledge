@@ -10,6 +10,8 @@ related:
   - concepts/loss-function.md
   - concepts/hyperparameter-tuning.md
   - datasets/ilsvrc.md
+  - concepts/backpropagation.md
+  - concepts/data-preprocessing.md
 created: 2026-11-23
 updated: 2026-11-23
 ---
@@ -77,7 +79,7 @@ $$
 
 ### Gradient check
 
-因為 analytic gradient 容易寫錯，實務上的標準做法是：**實際使用 analytic gradient，再拿 numerical gradient 和它比對**，確認實作正確。這叫做 **gradient check** [CS231n optimization-1 "Computing the gradient analytically with Calculus"; CS231n optimization-1 "Summary"]。
+因為 analytic gradient（實務上用 [backpropagation](backpropagation.md) 計算）容易寫錯，實務上的標準做法是：**實際使用 analytic gradient，再拿 numerical gradient 和它比對**，確認實作正確。這叫做 **gradient check** [CS231n optimization-1 "Computing the gradient analytically with Calculus"; CS231n optimization-1 "Summary"]。
 
 ### Step size（learning rate）
 
@@ -99,6 +101,7 @@ gradient 告訴我們**方向**，但沒有告訴我們**要走多遠**。這個
 - **太小**：進展穩定，但非常慢。
 - **太大**：可能進展比較快，但風險高，會 **overstep（走過頭）**，讓 loss 反而變高 [CS231n optimization-1 "Computing the gradient numerically with finite differences"]。
 - 筆記的示意圖在碗狀的 loss 地形上畫出負 gradient 的方向（白色箭頭），以及沿著這個方向延伸的虛線：小步會穩定接近谷底，大步則可能越過谷底 [CS231n optimization-1 "Computing the gradient numerically with finite differences" 圖]。
+- **資料的尺度也會影響 learning rate**：把輸入資料都乘以 1000，權重的 gradient 也會變成 1000 倍，learning rate 就要調小同樣的倍數 [CS231n optimization-2 "Patterns in backward flow"]。詳見 [Data Preprocessing](data-preprocessing.md)。
 
 ### Mini-batch gradient descent
 
@@ -131,12 +134,17 @@ batch size 是 hyperparameter，但**通常不用 cross-validation 來選**，�
 - **Loss**：[data loss](loss-function.md) 比較分數和標籤 $y_i$；[regularization](regularization.md) loss 只看 $W$。兩者相加得到 $L$。
 - **Gradient descent**：算出 $L$ 對 $W$ 的 gradient，用它來更新參數。
 
-## 下一步：Backpropagation
+## 怎麼算出 analytic gradient：Backpropagation
 
-CS231n 認為，**能夠計算 loss 對權重的 gradient（並且直觀地理解它），是設計、訓練和理解神經網路最重要的能力**。下一篇會用 chain rule 來計算 analytic gradient，也就是 **backpropagation** [CS231n optimization-1 "Summary"]。
+CS231n 認為，**能夠計算 loss 對權重的 gradient（並且直觀地理解它），是設計、訓練和理解神經網路最重要的能力** [CS231n optimization-1 "Summary"]。
+
+實務上，analytic gradient 是用 **[backpropagation](backpropagation.md)** 算的：反覆套用 chain rule，把運算拆成很多小步驟，每一步各自算出簡單的 local gradient，再從輸出往回一路相乘。這樣就不需要寫出完整的 gradient 公式 [CS231n optimization-2 "Introduction"; CS231n optimization-2 "Summary"]。
+
+backprop 負責**算出** gradient，gradient descent 負責**用** gradient 更新參數（綜合推論，依據 [CS231n optimization-2 "Summary"; CS231n optimization-1 "Gradient Descent"]）。
 
 ## 出現在哪些地方
 
 - [Optimization](optimization.md)：gradient descent 是策略 #3 的實作
 - [Hyperparameter Tuning](hyperparameter-tuning.md)：learning rate 和 batch size
 - [ILSVRC](../datasets/ilsvrc.md)：mini-batch 的動機
+- [Backpropagation](backpropagation.md)：計算 gradient 的方法

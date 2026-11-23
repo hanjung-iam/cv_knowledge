@@ -16,6 +16,8 @@ related:
   - concepts/optimization.md
   - concepts/gradient-descent.md
   - datasets/ilsvrc.md
+  - concepts/backpropagation.md
+  - concepts/data-preprocessing.md
 created: 2026-11-22
 updated: 2026-11-23
 ---
@@ -23,7 +25,7 @@ updated: 2026-11-23
 # Overview：Computer Vision 的演進主線
 
 > 這頁是整個 Wiki 的入口，會隨著每次 ingest 更新。
-> 目前收錄的來源：CS231n（classification、linear-classify、optimization-1）。
+> 目前收錄的來源：CS231n（classification、linear-classify、optimization-1、optimization-2）。
 
 ## Computer Vision 要解決什麼問題
 
@@ -65,9 +67,17 @@ CS231n 的伏筆是：CNN 從像素映射到分數的方式和這裡完全一樣
 
 到這裡，**score function + loss function + optimization** 三個元件都到齊了。CS231n 的預告是：之後只要把 score function 換成神經網路、CNN，loss 和最佳化的過程大致不變 [CS231n optimization-1 "Introduction"]。
 
+### 第五站：Backpropagation — 有效率地算出 gradient
+
+gradient descent 需要 loss 對每個權重的 gradient。[Backpropagation](concepts/backpropagation.md) 的做法是把運算拆成很多個簡單的 gate，每個 gate 只算自己的 local gradient，再用 **chain rule** 從輸出往回一路相乘 [CS231n optimization-2 "Introduction"; CS231n optimization-2 "Intuitive understanding of backpropagation"]。這樣就不需要寫出完整的 gradient 公式 [CS231n optimization-2 "Summary"]。
+
+它也說明了一個實務細節：資料的尺度會影響 gradient 的大小，所以 [資料前處理](concepts/data-preprocessing.md) 很重要 [CS231n optimization-2 "Patterns in backward flow"]。
+
+CS231n 的說法是：觀念上最難的部分已經過去了，**ConvNets 只差一小步** [CS231n optimization-2 "Summary"]。
+
 ### 下一站（待補）
 
-依照 CS231n 的脈絡，下一步是 **backpropagation**（用 chain rule 有效率地算出 gradient），然後是神經網路和 CNN [CS231n optimization-1 "Summary"]。這些內容會在對應來源 ingest 之後補上。
+依照 CS231n 的脈絡，接下來是神經網路和 CNN。這些內容會在對應來源 ingest 之後補上。
 
 ## 貫穿所有方法的紀律
 

@@ -68,3 +68,12 @@ Append-only 操作紀錄。格式：`## [YYYY-MM-DD] <type> | <title>`，type �
 - 工具：lint 新增歧義術語檢查；新增 tools/review.py
 - schema：第 4、8.1、9.3、11 節
 - 暫不新增頁面：neural network／CNN（來源尚未介紹）、overfitting、資料前處理
+
+## [2026-11-23] ingest | CS231n — optimization-2
+- 新增：concepts/backpropagation.md, concepts/data-preprocessing.md（整合 3 篇筆記的前處理內容）
+- 更新：concepts/gradient-descent.md, concepts/linear-classifier.md, concepts/k-nearest-neighbor.md, overview.md, sources/cs231n.md, index.md
+- 數字核對：19 項吻合；引用的 9 個小節標題皆存在於原文；3 個電路圖驗算正確
+- 自查：移除不當的 alias（sigmoid）
+- lint：0 / 3（2 處「正規化」未附英文、1 處清單未引用）→ 0 / 0
+- 檢查點 A：sigmoid 不獨立成頁；建立 data-preprocessing
+- 檢查點 B：通過

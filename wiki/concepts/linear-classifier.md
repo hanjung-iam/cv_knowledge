@@ -14,6 +14,8 @@ related:
   - datasets/cifar-10.md
   - concepts/optimization.md
   - concepts/gradient-descent.md
+  - concepts/data-preprocessing.md
+  - concepts/backpropagation.md
 created: 2026-11-23
 updated: 2026-11-23
 ---
@@ -124,11 +126,9 @@ CS231n 預告的解法是神經網路：hidden layer 的中間神經元可以分
 
 ### 影像前處理：Mean subtraction（減去平均）
 
-前面的例子用的是原始像素值，範圍是 0～255。但在機器學習中，通常都會先對輸入特徵做正規化（normalization）；對影像來說，每個像素就是一個特徵 [CS231n linear-classify "Interpreting a linear classifier"]：
+前面的例子用的是原始像素值，範圍是 0～255。實務上通常會先減去所有訓練影像的 mean image（像素範圍約變成 −127～127），再縮放到 −1～1 [CS231n linear-classify "Interpreting a linear classifier"]。
 
-- **Centering（中心化）**：計算所有訓練影像的 **mean image（平均影像）**，再從每張影像減掉它，像素範圍大約變成 −127～127 [CS231n linear-classify "Interpreting a linear classifier"]。
-- **Scaling（縮放）**：再把每個特徵縮放到 −1～1 [CS231n linear-classify "Interpreting a linear classifier"]。
-- 其中 zero mean centering 可以說比較重要，但原因要等學到 gradient descent 的動態之後才能解釋 [CS231n linear-classify "Interpreting a linear classifier"]。
+另外，由於權重和輸入是相乘的，**資料的尺度會直接影響權重 gradient 的大小**，進而影響 learning rate 的設定 [CS231n optimization-2 "Patterns in backward flow"]。完整內容詳見 [Data Preprocessing](data-preprocessing.md)。
 
 ## 怎麼找到好的 W
 
