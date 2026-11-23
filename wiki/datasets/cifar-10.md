@@ -50,8 +50,8 @@ updated: 2026-11-23
 | 方法 | 設定 | accuracy | 頁面 |
 |---|---|---|---|
 | 隨機猜測 | 10 類 | 10% [CS231n classification "Nearest Neighbor Classifier"] | |
-| Nearest Neighbor | L1 距離 | 38.6% [CS231n classification "Nearest Neighbor Classifier"] | [kNN](../concepts/k-nearest-neighbor.md) |
-| Nearest Neighbor | L2 距離 | 35.4% [CS231n classification "Nearest Neighbor Classifier"] | [kNN](../concepts/k-nearest-neighbor.md) |
+| Nearest Neighbor | L1 距離 | 38.6% [CS231n classification "Nearest Neighbor Classifier"] | [KNN](../concepts/k-nearest-neighbor.md) |
+| Nearest Neighbor | L2 距離 | 35.4% [CS231n classification "Nearest Neighbor Classifier"] | [KNN](../concepts/k-nearest-neighbor.md) |
 | Linear classifier（SVM loss） | 用 random search 訓練（1000 次） | 約 15.5% [CS231n optimization-1 "Strategy #1: A first very bad idea solution: Random search"] | [Optimization](../concepts/optimization.md) |
 | Linear classifier（SVM loss） | 用 random local search 訓練（1000 次） | 21.4% [CS231n optimization-1 "Strategy #2: Random Local Search"] | [Optimization](../concepts/optimization.md) |
 | 人類 | 估計值 | 約 94% [CS231n classification "Nearest Neighbor Classifier"] | |

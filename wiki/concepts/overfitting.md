@@ -85,7 +85,7 @@ regularization 越強，最終的決策區域越平滑 [CS231n neural-networks-1
 - **參數太多會 overfitting**：一般神經網路用在影像上時，全連接結構的參數量太大，很快就會導致 overfitting [CS231n convolutional-networks "Architecture Overview"]。CNN 的 [parameter sharing](convolutional-layer.md) 和 [pooling layer](pooling-layer.md) 都能減少參數量；CS231n 明確說 pooling 層的作用之一就是控制 overfitting [CS231n convolutional-networks "Pooling Layer"]。
 - **偏好小而分散的權重**：L2 regularization 讓分類器把每個輸入維度都考慮一點，而不是強烈依賴少數維度，這可以改善泛化表現、減少 overfitting [CS231n linear-classify "Multiclass Support Vector Machine loss"]。
 - **對 test set overfitting**：如果拿 test set 來調整 hyperparameter，就等於對 test set overfitting，測出來的成績會過度樂觀。test set 只在最後用一次，才能作為 generalization 的可靠指標 [CS231n classification "Validation sets for Hyperparameter tuning"]。詳見 [Hyperparameter Tuning](hyperparameter-tuning.md)。
-- **kNN 的 k**：k 越大，決策邊界越平滑，越不容易被異常值影響，可能帶來更好的 generalization [CS231n classification "k - Nearest Neighbor Classifier" 圖]。詳見 [k-Nearest Neighbor](k-nearest-neighbor.md)。
+- **KNN 的 k**：k 越大，決策邊界越平滑，越不容易被異常值影響，可能帶來更好的 generalization [CS231n classification "k - Nearest Neighbor Classifier" 圖]。詳見 [k-Nearest Neighbor](k-nearest-neighbor.md)。
 
 ## 出現在哪些地方
 

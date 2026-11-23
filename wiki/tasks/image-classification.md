@@ -95,9 +95,9 @@ CIFAR-10 的參考線：
 - 人類：估計約 94% [CS231n classification "Nearest Neighbor Classifier"]
 - （截至 CS231n 筆記撰寫時）state-of-the-art CNN：約 95%，與人類相當 [CS231n classification "Nearest Neighbor Classifier"]
 
-### 第一步：kNN 的教訓 — 必須超越 raw pixel
+### 第一步：KNN 的教訓 — 必須超越 raw pixel
 
-kNN 的失敗點出了這個領域的核心問題：直接比較像素，反映的是**背景和顏色分布**，而不是物體**是什麼**。例如狗和青蛙，只因為都在白色背景上，就被判定為相近 [CS231n classification "Pros and Cons of Nearest Neighbor classifier"]。CS231n 的結論是：要讓同一類別的影像聚在一起、不受背景等無關因素影響，就**必須超越 raw pixel** [CS231n classification "Pros and Cons of Nearest Neighbor classifier"]。
+KNN 的失敗點出了這個領域的核心問題：直接比較像素，反映的是**背景和顏色分布**，而不是物體**是什麼**。例如狗和青蛙，只因為都在白色背景上，就被判定為相近 [CS231n classification "Pros and Cons of Nearest Neighbor classifier"]。CS231n 的結論是：要讓同一類別的影像聚在一起、不受背景等無關因素影響，就**必須超越 raw pixel** [CS231n classification "Pros and Cons of Nearest Neighbor classifier"]。
 
 CS231n 也預告，後續課程的方法可以做到：
 - 約 90% 的 accuracy [CS231n classification "Summary"]
@@ -106,7 +106,7 @@ CS231n 也預告，後續課程的方法可以做到：
 
 ### 第二步：Parametric approach — Linear classifier
 
-[Linear classifier](../concepts/linear-classifier.md) 先解決了 kNN 的兩個實務問題 [CS231n linear-classify "Summary"]：
+[Linear classifier](../concepts/linear-classifier.md) 先解決了 KNN 的兩個實務問題 [CS231n linear-classify "Summary"]：
 - 學完參數之後就可以**丟掉訓練資料**，不用把整個 training set 留在身邊。
 - 預測一張圖只需要**一次矩陣乘法**，不用跟每張訓練圖片比對。
 
@@ -130,7 +130,7 @@ CS231n 也預告，後續課程的方法可以做到：
 
 [CNN](../concepts/convolutional-neural-network.md) 沿用 loss、optimization、[backprop](../concepts/backpropagation.md)，換掉的只有 score function [CS231n convolutional-networks "Convolutional Neural Networks (CNNs / ConvNets)"]。它利用「輸入是影像」這個前提，讓每個 neuron 只看一小塊區域（[conv layer](../concepts/convolutional-layer.md)），並在不同位置共用同一組權重，所以參數大幅減少 [CS231n convolutional-networks "Convolutional Layer"]。
 
-網路學出來的 filter，在第一層是各種方向的邊緣和色塊，到了較高的層則是更複雜的圖案 [CS231n convolutional-networks "Convolutional Layer"]。這正是 kNN 那一步得出的結論「必須超越 raw pixel」的答案：**不再比對像素，而是學出特徵**（綜合推論，依據 [CS231n classification "Pros and Cons of Nearest Neighbor classifier"; CS231n convolutional-networks "Convolutional Layer"]）。
+網路學出來的 filter，在第一層是各種方向的邊緣和色塊，到了較高的層則是更複雜的圖案 [CS231n convolutional-networks "Convolutional Layer"]。這正是 KNN 那一步得出的結論「必須超越 raw pixel」的答案：**不再比對像素，而是學出特徵**（綜合推論，依據 [CS231n classification "Pros and Cons of Nearest Neighbor classifier"; CS231n convolutional-networks "Convolutional Layer"]）。
 
 2012 年，[AlexNet](../models/alexnet.md) 在 [ILSVRC](../datasets/ilsvrc.md) 上大幅領先，讓 CNN 在 Computer Vision 中流行起來；之後 [VGGNet](../models/vggnet.md) 證明了深度的重要性，ResNet 則用 skip connections 繼續推進 [CS231n convolutional-networks "Case studies"]。
 

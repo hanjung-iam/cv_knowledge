@@ -17,7 +17,7 @@ Computer Vision 知識庫總目錄。每次 ingest 或新增頁面時更新。
 
 ## Concepts
 
-- [k-Nearest Neighbor (kNN)](concepts/k-nearest-neighbor.md) — 第一個 baseline；L1/L2 距離；pixel 距離不等於語意（sources: 1）
+- [k-Nearest Neighbor (KNN)](concepts/k-nearest-neighbor.md) — 第一個 baseline；L1/L2 距離；pixel 距離不等於語意（sources: 1）
 - [Linear Classifier](concepts/linear-classifier.md) — score function Wx + b；加權總和、幾何、template matching 三種理解；一類一個模板的極限（sources: 1）
 - [Loss Function](concepts/loss-function.md) — data loss + regularization loss；Multiclass SVM（hinge）loss；SVM vs Softmax（sources: 1）
 - [Softmax and Cross-Entropy Loss](concepts/softmax-cross-entropy.md) — 分數轉「機率」；資訊理論與 MLE 詮釋；數值穩定（sources: 1）

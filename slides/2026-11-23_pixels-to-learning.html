@@ -1,0 +1,1915 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>電腦怎麼學會看圖（上）：從比對像素到自己調整參數</title>
+<!--
+  CV Wiki 教學簡報
+  - 取材：只從 wiki/ 取材（schema 第 3 節規則 3、9.5、第 10 節）
+  - 每張投影片前都有一個「wiki: 頁面清單」的 HTML 註解，標明取材自哪些 Wiki 頁面
+  - 完全離線：CSS、JS、SVG 全部內嵌，不載入任何外部資源
+  - 操作：← → / PageUp PageDown / 空白鍵翻頁；Home、End；數字鍵 + Enter 跳頁；O 總覽
+  - 設計：參考 assets/ 中簡報模板的版面、配色與元素；插圖與裝飾皆為原創 SVG
+  - 版本：第二版（上集：影像分類 → KNN → Linear classifier → Loss → Optimization）
+-->
+<style>
+:root{
+  --bg:#fffaf5; --ink:#2b2c26; --olive:#7e854e; --olive-dk:#414522; --card:#ffffff;
+  --yellow:#fdefc4; --sage:#e6f1d5; --lav:#ece4ff; --sky:#d0ecf1; --pink:#fedbed; --peach:#fee4db;
+  --muted:#6b6d5e; --red:#c0573f; --green:#5f8a3a;
+  --head:"Segoe UI Black","Arial Black","Microsoft JhengHei","PingFang TC","Noto Sans TC","Heiti TC",sans-serif;
+  --body:"Segoe UI","Helvetica Neue","Microsoft JhengHei","PingFang TC","Noto Sans TC","Heiti TC",sans-serif;
+  --mono:"Cascadia Mono",Consolas,"SFMono-Regular",Menlo,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#e9e4dc;overflow:hidden;font-family:var(--body);color:var(--ink)}
+#stage{position:absolute;left:50%;top:50%;width:1440px;height:810px;transform-origin:center center}
+.slide{position:absolute;inset:0;background:var(--bg);overflow:hidden;display:none;
+  box-shadow:0 10px 40px rgba(60,55,40,.18);border-radius:6px}
+.slide.active{display:block;animation:fade .35s ease}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* 版面格線：左右 140px 留白 */
+.pad{position:absolute;left:140px;right:140px;top:96px;bottom:84px}
+.tag{position:absolute;left:140px;top:44px;font:700 15px/1 var(--body);letter-spacing:.18em;color:var(--olive);text-transform:uppercase}
+h1,h2{font-family:var(--head);font-weight:900;color:var(--ink);letter-spacing:-.01em}
+h1{font-size:96px;line-height:1.05}
+h2{font-size:54px;line-height:1.12}
+h2 em, h1 em{font-style:normal;color:var(--olive-dk)}
+h2 i, h1 i{color:var(--olive-dk)}
+h3{font:800 26px/1.25 var(--body);color:var(--olive-dk);letter-spacing:.02em}
+.lead{font-size:28px;line-height:1.5;color:var(--ink);margin-top:18px}
+.lead b{color:var(--olive-dk)}
+p,li{font-size:23px;line-height:1.55}
+.small{font-size:19px;line-height:1.5;color:var(--muted)}
+.note{font-size:16px;color:var(--muted)}
+.src{position:absolute;left:140px;bottom:30px;font-size:14px;color:#9a9c88;letter-spacing:.02em}
+.src::before{content:"Wiki ▸ "}
+.mono{font-family:var(--mono)}
+.math{font-family:"Cambria Math","Times New Roman",serif;font-style:italic;font-size:1.08em}
+.math b{font-style:normal}
+.hl{background:linear-gradient(transparent 58%,var(--yellow) 58%);padding:0 .1em}
+.tc{text-align:center}
+
+/* 勾選清單、星號清單（模板元素） */
+ul.check, ul.star{list-style:none}
+ul.check li, ul.star li{position:relative;padding-left:52px;margin:10px 0}
+ul.check li::before{content:"";position:absolute;left:0;top:6px;width:34px;height:26px;
+  background:no-repeat center/contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 34 26'%3E%3Cpath d='M3 14 L12 22 L31 3' fill='none' stroke='%237e854e' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M7 12 L12 17 L27 2' fill='none' stroke='%237e854e' stroke-width='2' stroke-linecap='round' opacity='.55'/%3E%3C/svg%3E")}
+ul.star li{padding-left:36px}
+ul.star li::before{content:"★";position:absolute;left:0;top:0;color:var(--olive);font-size:22px}
+
+/* 卡片（模板元素：白底、圓角、細橄欖綠邊） */
+.card{background:var(--card);border:2.5px solid var(--olive);border-radius:22px;padding:22px 26px}
+.card.soft{border-width:2px}
+.card h3{margin-bottom:8px}
+.card p{font-size:20px;line-height:1.5}
+.arrow-card{position:relative;padding-left:30px}
+.arrow-card::before{content:"→";position:absolute;left:-34px;top:50%;transform:translateY(-50%);color:var(--olive);font-size:34px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:26px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+.row{display:flex;gap:40px;align-items:center}
+.col{flex:1}
+.pill{display:inline-block;border:2px solid var(--olive);border-radius:999px;padding:4px 16px;font-size:18px;color:var(--olive-dk);background:#fff;margin:4px 6px 4px 0}
+.badge{display:inline-block;font:700 14px/1 var(--body);letter-spacing:.08em;color:#fff;background:var(--olive);border-radius:6px;padding:6px 10px;vertical-align:middle}
+.keybox{border:2.5px solid var(--olive);border-radius:22px;background:#fff;padding:18px 26px;font-size:24px;line-height:1.5}
+.keybox b{color:var(--olive-dk)}
+.big{font:900 64px/1 var(--head);color:var(--olive-dk)}
+.bignum{font:900 46px/1.05 var(--head);color:var(--olive-dk)}
+table.t{border-collapse:separate;border-spacing:0;font-size:20px;background:#fff;border:2px solid var(--olive);border-radius:16px;overflow:hidden}
+table.t th,table.t td{padding:10px 16px;border-bottom:1px solid #e3e0d2;text-align:left}
+table.t th{background:var(--sage);color:var(--olive-dk);font-weight:800}
+table.t tr:last-child td{border-bottom:none}
+
+/* 裝飾 */
+.deco{position:absolute;pointer-events:none}
+svg text{font-family:var(--body)}
+
+/* 介面：進度條、頁碼 */
+#bar{position:fixed;left:0;bottom:0;height:5px;background:var(--olive);transition:width .3s;z-index:9}
+#num{position:fixed;right:18px;bottom:14px;font:600 15px/1 var(--body);color:var(--olive-dk);background:rgba(255,250,245,.9);
+  border:1.5px solid var(--olive);border-radius:999px;padding:6px 14px;z-index:9}
+#hint{position:fixed;left:18px;bottom:14px;font-size:13px;color:#8c8e7a;z-index:9}
+#overview{position:fixed;inset:0;background:rgba(240,235,226,.97);display:none;overflow:auto;z-index:20;padding:30px}
+#overview.on{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;align-content:start}
+#overview button{all:unset;cursor:pointer;background:#fffaf5;border:2px solid #cfcbb8;border-radius:10px;padding:12px;font-size:15px;line-height:1.4}
+#overview button:hover,#overview button.cur{border-color:var(--olive)}
+#overview button b{color:var(--olive);margin-right:6px}
+@media print{
+  html,body{overflow:visible;background:#fff}
+  #stage{position:static;transform:none!important;width:auto;height:auto}
+  .slide{display:block!important;position:relative;width:1440px;height:810px;page-break-after:always;box-shadow:none}
+  #bar,#num,#hint{display:none}
+}
+
+/* ---- 第二版新增：名詞定義框、步驟、示意標記、公式、轉場頁、名詞索引 ---- */
+.def{background:#fff;border:2px solid var(--olive);border-left:9px solid var(--olive);border-radius:12px;padding:10px 18px;font-size:20px;line-height:1.5}
+.def .k{display:inline-block;font:800 13px/1 var(--body);letter-spacing:.1em;color:#fff;background:var(--olive);border-radius:4px;padding:4px 7px;margin-right:10px;vertical-align:3px}
+.def b{color:var(--olive-dk)}
+ol.steps{counter-reset:st;list-style:none}
+ol.steps li{position:relative;padding-left:48px;margin:9px 0;font-size:21px;line-height:1.5}
+ol.steps li::before{counter-increment:st;content:counter(st);position:absolute;left:0;top:1px;width:33px;height:33px;border-radius:50%;background:var(--olive);color:#fff;font:800 17px/33px var(--body);text-align:center}
+.demo-tag{display:inline-block;font:700 13px/1 var(--body);color:var(--red);border:1.5px solid var(--red);border-radius:5px;padding:3px 6px;margin-left:8px;vertical-align:3px;background:#fff}
+.formula{font-family:"Cambria Math","Times New Roman",serif;font-size:30px;color:var(--olive-dk);text-align:center;background:#fff;border:2px dashed var(--olive);border-radius:16px;padding:12px 20px;line-height:1.35}
+.formula i{font-style:italic}
+table.t.sm{font-size:18px}
+table.t.sm th,table.t.sm td{padding:8px 14px}
+table.t td b{color:var(--olive-dk)}
+/* 轉場頁 */
+.trans .band{position:absolute;left:0;top:0;bottom:0;width:470px;padding:64px 40px 0 70px}
+.trans .band .st{font:800 17px/1 var(--body);letter-spacing:.28em;color:var(--olive-dk)}
+.trans .band .no{font:900 190px/1 var(--head);color:var(--olive-dk);margin-top:14px;letter-spacing:-.04em}
+.trans .band h2{font-size:50px;margin-top:16px}
+.trans .band .sub{font-size:22px;margin-top:14px;color:var(--olive-dk)}
+.trans .tbox{position:absolute;left:530px;right:80px;top:46px}
+.trans .tbox .card{margin-bottom:14px;padding:14px 24px}
+.trans .tbox .card h3{font-size:21px;margin-bottom:4px}
+.trans .tbox .card p,.trans .tbox .card li{font-size:20px;line-height:1.5}
+.trans .tbox ul.check li{margin:4px 0;padding-left:46px}
+.trans .tbox .pill{font-size:16px;padding:3px 12px}
+.trans .route{position:absolute;left:530px;right:80px;bottom:40px;height:64px}
+.trans .src{bottom:14px}
+/* 名詞索引 */
+.gloss{display:grid;grid-template-columns:1fr 1fr;gap:6px 30px}
+.gloss div{font-size:17.5px;line-height:1.45;padding:5px 12px;border-left:4px solid var(--olive);background:#fff;border-radius:6px}
+.gloss b{color:var(--olive-dk)}
+</style>
+</head>
+<body>
+
+<!-- 共用的 SVG 符號：裝飾色塊與線稿插圖（原創，參考模板的形狀語彙） -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="d-asterisk" viewBox="0 0 100 100"><g transform="translate(50 50)">
+      <rect x="-9" y="-48" width="18" height="96" rx="9"/><rect x="-9" y="-48" width="18" height="96" rx="9" transform="rotate(60)"/><rect x="-9" y="-48" width="18" height="96" rx="9" transform="rotate(120)"/></g></symbol>
+    <symbol id="d-flower" viewBox="0 0 100 100"><g transform="translate(50 50)">
+      <ellipse rx="13" ry="26" cy="-24"/><ellipse rx="13" ry="26" cy="-24" transform="rotate(72)"/><ellipse rx="13" ry="26" cy="-24" transform="rotate(144)"/><ellipse rx="13" ry="26" cy="-24" transform="rotate(216)"/><ellipse rx="13" ry="26" cy="-24" transform="rotate(288)"/></g></symbol>
+    <symbol id="d-ring" viewBox="0 0 100 100"><circle cx="50" cy="50" r="36" fill="none" stroke-width="26" stroke="currentColor"/></symbol>
+    <symbol id="d-halves" viewBox="0 0 100 150"><path d="M0 50 A50 50 0 0 1 100 50 Z M0 100 A50 50 0 0 1 100 100 Z M0 150 A50 50 0 0 1 100 150 Z"/></symbol>
+    <symbol id="d-scallop" viewBox="0 0 200 60"><path d="M0 0 H200 V20 A25 25 0 0 1 150 20 A25 25 0 0 1 100 20 A25 25 0 0 1 50 20 A25 25 0 0 1 0 20 Z" transform="translate(0 10)"/><rect width="200" height="12"/></symbol>
+    <symbol id="d-waves" viewBox="0 0 200 120"><g fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round">
+      <path d="M0 15 q25 -18 50 0 t50 0 t50 0 t50 0"/><path d="M0 45 q25 -18 50 0 t50 0 t50 0 t50 0"/><path d="M0 75 q25 -18 50 0 t50 0 t50 0 t50 0"/><path d="M0 105 q25 -18 50 0 t50 0 t50 0 t50 0"/></g></symbol>
+    <symbol id="d-checker" viewBox="0 0 120 80"><rect x="0" y="0" width="20" height="20"/><rect x="40" y="0" width="20" height="20"/><rect x="20" y="20" width="20" height="20"/><rect x="60" y="20" width="20" height="20"/><rect x="0" y="40" width="20" height="20"/><rect x="40" y="40" width="20" height="20"/><rect x="80" y="40" width="20" height="20"/><rect x="20" y="60" width="20" height="20"/><rect x="60" y="60" width="20" height="20"/></symbol>
+    <symbol id="d-star" viewBox="0 0 100 100"><polygon points="50,0 58,34 92,18 66,44 100,52 64,60 82,92 52,68 40,100 38,64 6,80 30,54 0,40 34,36 18,6 44,30"/></symbol>
+    <symbol id="d-rays" viewBox="0 0 100 100"><g stroke="currentColor" stroke-width="10" stroke-linecap="round">
+      <line x1="50" y1="50" x2="50" y2="4"/><line x1="50" y1="50" x2="83" y2="17"/><line x1="50" y1="50" x2="96" y2="50"/><line x1="50" y1="50" x2="83" y2="83"/><line x1="50" y1="50" x2="50" y2="96"/><line x1="50" y1="50" x2="17" y2="83"/><line x1="50" y1="50" x2="4" y2="50"/><line x1="50" y1="50" x2="17" y2="17"/></g></symbol>
+    <symbol id="d-target" viewBox="0 0 100 100"><g fill="none" stroke="currentColor" stroke-width="9"><circle cx="50" cy="50" r="44"/><circle cx="50" cy="50" r="28"/><circle cx="50" cy="50" r="12"/></g></symbol>
+    <symbol id="d-blob" viewBox="0 0 120 80"><path d="M20 60 C0 40 10 5 35 10 C45 -5 70 0 72 15 C90 0 118 15 108 40 C125 60 95 82 75 70 C60 85 30 82 20 60 Z"/></symbol>
+    <symbol id="d-tri" viewBox="0 0 150 40"><path d="M0 40 L25 10 L50 40 L75 10 L100 40 L125 10 L150 40 Z"/></symbol>
+
+    <!-- 線稿插圖（橄欖綠、圓角筆觸） -->
+    <symbol id="i-camera" viewBox="0 0 220 180"><g fill="none" stroke="#7e854e" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="30" y="50" width="150" height="100" rx="18"/><path d="M70 50 L82 28 H128 L140 50"/><circle cx="105" cy="100" r="32"/><circle cx="105" cy="100" r="16"/>
+      <circle cx="158" cy="72" r="5"/><path d="M196 34 l12 -10 M198 58 h16 M16 40 l-10 -8"/><path d="M14 150 c-12 -8 -4 -22 8 -16 c8 4 2 16 -8 14"/>
+      <rect x="150" y="118" width="22" height="18" rx="3"/><path d="M155 124 h12 M155 130 h8"/></g></symbol>
+    <symbol id="i-grid" viewBox="0 0 220 200"><g fill="none" stroke="#7e854e" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="20" y="20" width="120" height="120" rx="10"/><path d="M60 20 V140 M100 20 V140 M20 60 H140 M20 100 H140"/>
+      <circle cx="150" cy="140" r="34"/><path d="M174 164 L206 196"/><path d="M138 128 l10 0 M150 128 l8 8"/><path d="M180 30 l14 -12 M186 52 h18"/></g></symbol>
+    <symbol id="i-net" viewBox="0 0 240 200"><g fill="none" stroke="#7e854e" stroke-width="5" stroke-linecap="round">
+      <path d="M40 40 L120 60 M40 40 L120 100 M40 40 L120 140 M40 100 L120 60 M40 100 L120 100 M40 100 L120 140 M40 160 L120 60 M40 160 L120 100 M40 160 L120 140 M120 60 L200 80 M120 100 L200 80 M120 140 L200 80 M120 60 L200 130 M120 100 L200 130 M120 140 L200 130"/>
+      <g fill="#fffaf5" stroke-width="6"><circle cx="40" cy="40" r="16"/><circle cx="40" cy="100" r="16"/><circle cx="40" cy="160" r="16"/><circle cx="120" cy="60" r="16"/><circle cx="120" cy="100" r="16"/><circle cx="120" cy="140" r="16"/><circle cx="200" cy="80" r="16"/><circle cx="200" cy="130" r="16"/></g>
+      <path d="M214 30 l10 -10 M222 48 h12"/></g></symbol>
+    <symbol id="i-hike" viewBox="0 0 240 180"><g fill="none" stroke="#7e854e" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M10 160 L70 70 L105 115 L150 40 L230 160 Z"/><path d="M150 40 V12 L176 20 L150 28"/><path d="M60 150 C90 140 110 150 130 130 C150 110 170 120 190 100" stroke-dasharray="4 12"/>
+      <circle cx="195" cy="97" r="7"/><path d="M20 30 c10 -12 24 -4 18 6 c-6 10 -22 2 -12 -10"/></g></symbol>
+    <symbol id="i-layers" viewBox="0 0 240 180"><g fill="none" stroke="#7e854e" stroke-width="6" stroke-linejoin="round" stroke-linecap="round">
+      <path d="M20 120 L60 100 V30 L20 50 Z"/><path d="M80 115 L110 100 V45 L80 60 Z"/><path d="M128 108 L150 98 V60 L128 70 Z"/><path d="M168 100 L180 94 V74 L168 80 Z"/>
+      <path d="M200 86 h26"/><path d="M60 65 h14 M110 75 h12 M150 82 h12"/><path d="M30 150 c14 -8 28 8 42 0 c14 -8 28 8 42 0"/></g></symbol>
+    <symbol id="i-trophy" viewBox="0 0 200 200"><g fill="none" stroke="#7e854e" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M60 30 H140 V80 C140 110 120 125 100 125 C80 125 60 110 60 80 Z"/><path d="M60 45 H35 C30 75 45 90 62 92 M140 45 H165 C170 75 155 90 138 92"/>
+      <path d="M100 125 V150 M70 172 H130 M80 150 H120 V172"/><path d="M100 55 l6 12 l13 2 l-9 9 l2 13 l-12 -6 l-12 6 l2 -13 l-9 -9 l13 -2 Z"/><path d="M28 20 l-12 -10 M176 20 l12 -10 M184 120 h14"/></g></symbol>
+    <symbol id="i-book" viewBox="0 0 220 180"><g fill="none" stroke="#7e854e" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M110 40 C80 25 45 25 20 35 V150 C45 140 80 140 110 155 C140 140 175 140 200 150 V35 C175 25 140 25 110 40 Z"/><path d="M110 40 V155"/>
+      <path d="M40 60 h45 M40 80 h45 M40 100 h35 M135 60 h45 M135 80 h45 M135 100 h35"/><path d="M196 18 l10 -10 M206 34 h12"/></g></symbol>
+    <symbol id="i-map" viewBox="0 0 220 180"><g fill="none" stroke="#7e854e" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M20 40 L80 20 L140 40 L200 20 V140 L140 160 L80 140 L20 160 Z"/><path d="M80 20 V140 M140 40 V160"/>
+      <path d="M45 120 C70 100 60 70 100 70 C140 70 120 110 170 90" stroke-dasharray="3 11"/><path d="M162 80 l14 14 M176 80 l-14 14"/></g></symbol>
+    <marker id="ah" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#7e854e"/></marker>
+  </defs>
+</svg>
+
+<div id="stage">
+
+<!-- ============================ 序章 ============================ -->
+<!-- wiki: overview.md -->
+<section class="slide" data-title="封面">
+  <svg class="deco" style="right:-90px;top:-120px;width:420px;height:420px;color:var(--yellow)"><use href="#d-ring"/></svg>
+  <svg class="deco" style="left:-20px;bottom:-30px;width:190px;height:285px;fill:var(--sky)"><use href="#d-halves"/></svg>
+  <svg class="deco" style="left:330px;top:380px;width:120px;height:120px;fill:var(--pink)"><use href="#d-asterisk"/></svg>
+  <svg class="deco" style="right:150px;top:70px;width:300px;height:250px"><use href="#i-camera"/></svg>
+  <div class="tag" style="top:70px">CV Wiki × CS231n 課程筆記 · 教學簡報（上集）</div>
+  <div style="position:absolute;right:140px;top:320px;text-align:right">
+    <h1 style="font-size:104px">電腦怎麼學會<em>看圖</em></h1>
+    <div style="font:900 52px/1.2 var(--head);margin-top:10px">從比對像素，到自己調整參數</div>
+    <p style="font-size:28px;font-style:italic;margin-top:30px">每一站，都在解決前一站留下的問題</p>
+    <p class="small" style="margin-top:22px">上集：影像分類 → KNN → Linear classifier → Loss → Optimization　｜　下集：神經網路與 CNN</p>
+  </div>
+  <div class="src">overview</div>
+</section>
+
+<!-- wiki: overview.md -->
+<section class="slide" data-title="今天的路線圖">
+  <svg class="deco" style="right:-60px;top:-60px;width:260px;height:260px;fill:var(--sage)"><use href="#d-flower"/></svg>
+  <svg class="deco" style="left:-30px;bottom:40px;width:180px;height:110px;color:var(--pink)"><use href="#d-waves"/></svg>
+  <div class="tag">Roadmap</div>
+  <div class="pad">
+    <h2>今天的<em>路線圖</em></h2>
+    <p class="lead">從一個問題出發，經過四站。每一站都是為了解決前一站留下的問題。</p>
+    <svg viewBox="0 0 1160 440" style="width:100%;margin-top:6px">
+      <path d="M70 330 C170 330 160 170 260 170 S360 300 450 300 S560 160 660 160 S770 300 860 300 S990 170 1080 175" fill="none" stroke="#7e854e" stroke-width="5" stroke-dasharray="2 14" stroke-linecap="round"/>
+      <g font-size="23" text-anchor="middle" fill="#2b2c26">
+        <g transform="translate(70 330)"><circle r="38" fill="#fdefc4" stroke="#7e854e" stroke-width="4"/><text y="10" font-size="26" font-weight="800" fill="#414522">0</text><text y="74" font-weight="800">影像分類</text><text y="102" font-size="18" fill="#6b6d5e">問題是什麼？</text></g>
+        <g transform="translate(260 170)"><circle r="38" fill="#fee4db" stroke="#7e854e" stroke-width="4"/><text y="10" font-size="26" font-weight="800" fill="#414522">1</text><text y="-84" font-weight="800">KNN</text><text y="-56" font-size="18" fill="#6b6d5e">直接比對像素</text></g>
+        <g transform="translate(450 300)"><circle r="38" fill="#d0ecf1" stroke="#7e854e" stroke-width="4"/><text y="10" font-size="26" font-weight="800" fill="#414522">2</text><text y="74" font-weight="800">Linear classifier</text><text y="102" font-size="18" fill="#6b6d5e">把資料濃縮成參數</text></g>
+        <g transform="translate(660 160)"><circle r="38" fill="#fedbed" stroke="#7e854e" stroke-width="4"/><text y="10" font-size="26" font-weight="800" fill="#414522">3</text><text y="-84" font-weight="800">Loss</text><text y="-56" font-size="18" fill="#6b6d5e">替參數打分數</text></g>
+        <g transform="translate(860 300)"><circle r="38" fill="#ece4ff" stroke="#7e854e" stroke-width="4"/><text y="10" font-size="26" font-weight="800" fill="#414522">4</text><text y="74" font-weight="800">Optimization</text><text y="102" font-size="18" fill="#6b6d5e">把參數調好</text></g>
+        <g transform="translate(1080 175)"><circle r="38" fill="#fffaf5" stroke="#9a9c88" stroke-width="3" stroke-dasharray="6 6"/><text y="8" font-size="18" fill="#9a9c88">下集</text><text y="-84" fill="#9a9c88">神經網路、CNN</text><text y="-56" font-size="18" fill="#9a9c88">換掉 score function</text></g>
+      </g>
+    </svg>
+  </div>
+  <div class="src">overview</div>
+</section>
+
+<!-- wiki: （無，本頁說明簡報的閱讀方式） -->
+<section class="slide" data-title="怎麼讀這份簡報">
+  <svg class="deco" style="right:-40px;bottom:-40px;width:220px;height:220px;color:var(--sky)"><use href="#d-target"/></svg>
+  <div class="tag">How to read</div>
+  <div class="pad">
+    <h2>怎麼讀<em>這份簡報</em></h2>
+    <p class="lead">這份簡報沒有講稿，所以每一頁都盡量把話說完整。你會看到四種固定的元素：</p>
+    <div class="grid2" style="margin-top:24px;gap:22px 30px">
+      <div class="card soft"><h3>① 轉場頁</h3><p>每一站開始前有一張彩色的轉場頁，說明<b>上一站留下了什麼問題</b>、這一站打算怎麼解決、要回答哪些問題。</p></div>
+      <div class="card soft"><h3>② 名詞定義框</h3><div class="def" style="margin-top:6px"><span class="k">名詞</span><b>專有名詞</b>：第一次出現時，用這種框寫出它的意思。</div></div>
+      <div class="card soft"><h3>③ 「示意」標記<span class="demo-tag">示意</span></h3><p>帶這個標記的數字，是為了說明算法而自己編的簡單例子，<b>不是實驗結果</b>。其他數字都來自 CS231n 課程筆記。</p></div>
+      <div class="card soft"><h3>④ 頁尾的來源</h3><p>左下角的「Wiki ▸ …」標出這一頁取材自知識庫的哪幾個頁面，可以回去查完整的說明和原文出處。</p></div>
+    </div>
+  </div>
+  <div class="src">（本頁說明閱讀方式）</div>
+</section>
+
+<!-- wiki: tasks/image-classification.md, overview.md -->
+<section class="slide trans" data-title="起點：影像分類（轉場）">
+  <div class="band" style="background:var(--yellow)">
+    <div class="st">START</div><div class="no">00</div>
+    <h2>起點：<br>影像分類</h2>
+    <p class="sub">我們到底要電腦做什麼？</p>
+    <svg class="deco" style="left:60px;bottom:40px;width:250px;height:200px"><use href="#i-camera"/></svg>
+  </div>
+  <div class="tbox">
+    <div class="card"><h3>為什麼從這裡開始</h3><p>影像分類是 Computer Vision 的核心問題之一，有大量實際應用。許多看起來不一樣的任務，例如 object detection（找出物體<b>在哪裡</b>）、segmentation（判斷<b>每個像素</b>屬於什麼），都可以化約成分類問題。所以先把分類學會。</p></div>
+    <div class="card"><h3>這一站要回答</h3><ul class="check"><li>電腦「看到」的影像，到底是什麼？</li><li>為什麼分類這件事對電腦很難？</li><li>解法的大方向是什麼？</li></ul></div>
+    <div><span class="pill">影像分類</span><span class="pill">像素 pixel</span><span class="pill">標籤 label</span><span class="pill">data-driven</span><span class="pill">training set／test set</span><span class="pill">accuracy</span></div>
+  </div>
+  <div class="route" data-cur="0"></div>
+  <div class="src" style="left:540px">tasks / image-classification · overview</div>
+</section>
+
+<!-- wiki: tasks/image-classification.md -->
+<section class="slide" data-title="電腦看到的是一堆數字">
+  <svg class="deco" style="right:-40px;bottom:-60px;width:240px;height:240px;color:var(--sky)"><use href="#d-ring"/></svg>
+  <div class="tag">00 · 起點 影像分類</div>
+  <div class="pad">
+    <h2>電腦看到的是<em>一堆數字</em></h2>
+    <div class="def" style="margin-top:16px"><span class="k">名詞</span><b>影像分類（Image Classification）</b>：給電腦一張圖片，讓它從一組<b>事先固定好的類別</b>中，選出最符合的一個<b>標籤（label）</b>，例如 cat、dog。</div>
+    <div class="row" style="margin-top:18px;align-items:flex-start;gap:30px">
+      <div class="col">
+        <div class="def"><span class="k">名詞</span><b>像素（pixel）</b>：影像上的一個小點。彩色影像的每個像素有紅、綠、藍 3 個數字（3 個<b>顏色通道</b>），每個數字是 0（黑）～ 255（白）的整數。</div>
+        <p style="font-size:22px;margin-top:16px">一張寬 248、高 400 的彩色照片，對電腦來說是：</p>
+        <p class="bignum" style="margin:8px 0 4px;font-size:40px">248 × 400 × 3 = 297,600 個數字</p>
+        <div class="keybox" style="margin-top:16px;font-size:22px">任務：把這 <b>297,600 個數字</b>變成一個標籤，例如「cat」。</div>
+      </div>
+      <svg viewBox="0 0 470 330" style="width:450px">
+        <g transform="translate(10 20)"><g id="pix"></g></g>
+        <path d="M205 120 h40" stroke="#7e854e" stroke-width="4" stroke-linecap="round" marker-end="url(#ah)"/>
+        <g font-size="19" fill="#2b2c26">
+          <text x="262" y="48" font-weight="700" fill="#414522">模型的輸出</text>
+          <text x="262" y="92">cat</text><rect x="320" y="76" width="123" height="22" rx="6" fill="#7e854e"/><text x="438" y="93" font-size="16" text-anchor="end" fill="#fff">82%</text>
+          <text x="262" y="132">dog</text><rect x="320" y="116" width="23" height="22" rx="6" fill="#b8bd8f"/><text x="350" y="133" font-size="16">15%</text>
+          <text x="262" y="172">hat</text><rect x="320" y="156" width="4" height="22" rx="2" fill="#b8bd8f"/><text x="332" y="173" font-size="16">2%</text>
+          <text x="262" y="212">mug</text><rect x="320" y="196" width="2" height="22" rx="1" fill="#b8bd8f"/><text x="332" y="213" font-size="16">1%</text>
+          <text x="262" y="250" font-size="15" fill="#6b6d5e">模型通常會對每個類別</text>
+          <text x="262" y="270" font-size="15" fill="#6b6d5e">給一個機率，表示多確定</text>
+          <text x="10" y="300" font-size="15" fill="#6b6d5e">放大一小塊：每一格只是一個數字</text>
+          <text x="10" y="322" font-size="13" fill="#c0573f" font-weight="700">格子裡的數值為示意</text>
+        </g>
+      </svg>
+    </div>
+  </div>
+  <div class="src">tasks / image-classification</div>
+</section>
+
+<!-- wiki: tasks/image-classification.md -->
+<section class="slide" data-title="為什麼這件事對電腦很難">
+  <svg class="deco" style="left:-70px;top:-70px;width:230px;height:230px;color:var(--pink)"><use href="#d-ring"/></svg>
+  <svg class="deco" style="right:-20px;bottom:-20px;width:170px;height:120px;fill:var(--sage)"><use href="#d-checker"/></svg>
+  <div class="tag">00 · 起點 影像分類</div>
+  <div class="pad">
+    <h2>為什麼這件事對電腦<em>很難</em>？</h2>
+    <p class="lead" style="font-size:25px">人一眼就認得出貓，但電腦比對的是數字。同一隻貓換個角度、光線、姿勢，那些數字就跟著改變。CS231n 列出的難點：</p>
+    <div class="grid4" style="margin-top:18px;gap:16px">
+      <div class="card soft"><h3>視角變化</h3><p>Viewpoint：同一個物體從不同角度拍，看起來完全不同</p></div>
+      <div class="card soft"><h3>尺度變化</h3><p>Scale：同一類物體的實際大小差很多</p></div>
+      <div class="card soft"><h3>形變</h3><p>Deformation：很多物體不是剛體，可以扭曲（例如貓的姿勢）</p></div>
+      <div class="card soft"><h3>遮蔽</h3><p>Occlusion：物體可能只露出一小部分</p></div>
+      <div class="card soft"><h3>光照</h3><p>Illumination：光線對像素的影響非常劇烈</p></div>
+      <div class="card soft"><h3>背景雜亂</h3><p>Background clutter：物體和背景融在一起</p></div>
+      <div class="card soft"><h3>類內差異</h3><p>Intra-class variation：同一類（例如椅子）外觀差很多</p></div>
+      <div class="card" style="background:var(--yellow);border-style:dashed"><p style="font-size:19px"><b>CS231n 也強調：</b>這份清單並不完整</p></div>
+    </div>
+    <div class="def" style="margin-top:18px"><span class="k">目標</span>好的模型要對上面這些變化保持 <b>invariant（不變）</b>：輸入的樣子變了，答案不變；同時又要對<b>不同類別之間的差異</b>保持敏感。</div>
+  </div>
+  <div class="src">tasks / image-classification</div>
+</section>
+
+<!-- wiki: tasks/image-classification.md -->
+<section class="slide" data-title="Data-driven approach">
+  <svg class="deco" style="right:40px;top:-10px;width:200px;height:200px;color:var(--yellow)"><use href="#d-waves"/></svg>
+  <svg class="deco" style="left:600px;bottom:-14px;width:240px;height:64px;fill:var(--sky)"><use href="#d-tri"/></svg>
+  <div class="tag">00 · 起點 影像分類</div>
+  <div class="pad">
+    <h2>解法的大方向：<em>Data-driven approach</em></h2>
+    <p class="lead" style="font-size:25px">排序數字可以寫成明確的步驟，但「怎麼認出一隻貓」很難寫成程式規則。所以改成<b>像教小孩一樣</b>：給電腦看很多已經標好答案的例子，讓學習演算法自己學出每個類別的樣子。</p>
+    <div class="grid3" style="gap:56px;margin:26px 0 0 34px">
+      <div class="card arrow-card"><h3>1 · Input</h3><p>準備 N 張影像，每張都標好 K 個類別中的一個。這批資料叫 <b>training set</b>。</p></div>
+      <div class="card arrow-card"><h3>2 · Learning</h3><p>用 training set 學出每個類別的樣子，叫做 training a classifier（訓練分類器）。</p></div>
+      <div class="card arrow-card"><h3>3 · Evaluation</h3><p>讓分類器預測一批<b>它從沒看過</b>的影像（test set），再和真正的答案比對。</p></div>
+    </div>
+    <div class="grid2" style="margin-top:22px;gap:20px">
+      <div class="def"><span class="k">名詞</span><b>Ground truth</b>：每張影像真正的標籤，也就是「標準答案」。</div>
+      <div class="def"><span class="k">名詞</span><b>Accuracy（準確率）</b>：預測正確的比例。這是影像分類最常用的評估標準。</div>
+    </div>
+  </div>
+  <div class="src">tasks / image-classification</div>
+</section>
+
+<!-- wiki: datasets/cifar-10.md, tasks/image-classification.md -->
+<section class="slide" data-title="CIFAR-10">
+  <svg class="deco" style="right:-60px;top:-60px;width:260px;height:260px;color:var(--sage)"><use href="#d-target"/></svg>
+  <div class="tag">00 · 起點 影像分類</div>
+  <div class="pad">
+    <h2>這份簡報的練習場：<em>CIFAR-10</em></h2>
+    <p class="lead" style="font-size:25px">CS231n 用來做實驗的資料集。它稱 CIFAR-10 為「toy」資料集：小、簡單，適合入門。</p>
+    <div class="grid4" style="margin-top:20px">
+      <div class="card tc"><div class="bignum">60,000</div><p>張影像</p></div>
+      <div class="card tc"><div class="bignum">32 × 32</div><p>像素，3 個顏色通道</p></div>
+      <div class="card tc"><div class="bignum">10</div><p>個類別</p></div>
+      <div class="card tc"><div class="bignum" style="font-size:34px;line-height:1.35">50,000 ／ 10,000</div><p>training／test</p></div>
+    </div>
+    <div style="margin-top:16px">
+      <span class="pill">airplane</span><span class="pill">automobile</span><span class="pill">bird</span><span class="pill">cat</span><span class="pill">deer</span><span class="pill">dog</span><span class="pill">frog</span><span class="pill">horse</span><span class="pill">ship</span><span class="pill">truck</span>
+    </div>
+    <div class="row" style="margin-top:18px;gap:26px;align-items:stretch">
+      <div class="card soft col"><h3>攤平成一長串數字</h3><p>32 × 32 × 3 = <b>3,072</b>。把每張影像的所有數字排成一列，就是一個長度 3,072 的<b>向量</b>。後面的方法都把影像當成這樣一串數字。</p></div>
+      <div class="card soft col"><h3>兩條參考線</h3><p>隨機猜測：<b>10%</b>（10 個類別，亂猜猜對的機會是十分之一）<br>人類：估計約 <b>94%</b>（原文寫 "estimated"，出處是一篇部落格文章）</p></div>
+    </div>
+  </div>
+  <div class="src">datasets / cifar-10 · tasks / image-classification</div>
+</section>
+
+<!-- ============================ 第一站 KNN ============================ -->
+<!-- wiki: concepts/k-nearest-neighbor.md, tasks/image-classification.md -->
+<section class="slide trans" data-title="第一站：KNN（轉場）">
+  <div class="band" style="background:var(--peach)">
+    <div class="st">STATION</div><div class="no">01</div>
+    <h2>KNN：<br>直接比對像素</h2>
+    <p class="sub">最直覺的 data-driven 方法</p>
+    <svg class="deco" style="left:60px;bottom:40px;width:240px;height:220px"><use href="#i-grid"/></svg>
+  </div>
+  <div class="tbox">
+    <div class="card"><h3>上一站留下的問題</h3><p>我們決定讓電腦「從例子中學」。那麼最直接的做法是什麼？→ 把新圖片拿去和看過的例子<b>一張一張比對</b>，找出最像的。</p></div>
+    <div class="card"><h3>為什麼先學它</h3><p>CS231n 用 KNN 當第一個方法，<b>不是因為它好用</b>：它和 CNN 無關，實務上也很少使用。用它是為了先理解影像分類問題的基本做法。</p></div>
+    <div class="card"><h3>這一站要回答</h3><ul class="check"><li>「兩張圖有多像」要怎麼用數字算？</li><li>找到最像的幾張之後，怎麼決定答案？效果如何？</li><li>方法裡需要人來決定的設定，該怎麼選？</li></ul></div>
+    <div><span class="pill">Nearest Neighbor</span><span class="pill">L1／L2 距離</span><span class="pill">KNN</span><span class="pill">決策邊界</span><span class="pill">hyperparameter</span><span class="pill">validation set</span><span class="pill">overfitting</span></div>
+  </div>
+  <div class="route" data-cur="1"></div>
+  <div class="src" style="left:540px">concepts / k-nearest-neighbor</div>
+</section>
+
+<!-- wiki: concepts/k-nearest-neighbor.md, datasets/cifar-10.md -->
+<section class="slide" data-title="Nearest Neighbor">
+  <svg class="deco" style="right:-50px;bottom:-50px;width:230px;height:230px;fill:var(--peach)"><use href="#d-asterisk"/></svg>
+  <div class="tag">01 · 第一站 KNN</div>
+  <div class="pad">
+    <h2>Nearest Neighbor：<em>找最像的那一張</em></h2>
+    <p class="lead" style="font-size:25px">就像帶著<b>整本有標註的圖鑑</b>去考試：遇到不認識的東西，就翻圖鑑找長得最像的那一頁，照抄它的名字。</p>
+    <div class="row" style="margin-top:14px;align-items:flex-start;gap:30px">
+      <div class="col">
+        <ol class="steps">
+          <li><b>訓練（train）</b>：什麼都不學，只是把所有訓練影像和它們的標籤<b>存起來</b>。CIFAR-10 就是存下 50,000 張。</li>
+          <li><b>預測（predict）</b>：把新影像和<b>每一張</b>訓練影像比較，找出「距離」最近的那一張，直接採用它的標籤。</li>
+        </ol>
+        <div class="def" style="margin-top:14px"><span class="k">名詞</span><b>距離（distance）</b>：用一個數字表示兩張圖「差多少」。數字越小越像；兩張圖完全一樣時是 0。下一頁介紹怎麼算。</div>
+      </div>
+      <svg viewBox="0 0 470 360" style="width:470px"><g id="nn-demo"></g></svg>
+    </div>
+  </div>
+  <div class="src">concepts / k-nearest-neighbor</div>
+</section>
+
+<!-- wiki: concepts/k-nearest-neighbor.md, datasets/cifar-10.md -->
+<section class="slide" data-title="L1 距離">
+  <svg class="deco" style="left:-40px;top:-50px;width:200px;height:200px;fill:var(--yellow)"><use href="#d-flower"/></svg>
+  <div class="tag">01 · 第一站 KNN</div>
+  <div class="pad">
+    <h2>怎麼算「有多像」① <em>L1 距離</em></h2>
+    <div class="def" style="margin-top:16px"><span class="k">名詞</span><b>L1 距離</b>：把兩張影像<b>逐個像素相減</b>，取絕對值（去掉正負號），再<b>全部加起來</b>。</div>
+    <div class="row" style="margin-top:18px;align-items:flex-start;gap:34px">
+      <div style="width:470px">
+        <div class="formula"><i>d</i><sub>1</sub>(<i>I</i><sub>1</sub>, <i>I</i><sub>2</sub>) = Σ<sub><i>p</i></sub> |<i>I</i><sub>1</sub><sup><i>p</i></sup> − <i>I</i><sub>2</sub><sup><i>p</i></sup>|</div>
+        <ul class="star" style="margin-top:14px">
+          <li style="font-size:20px"><span class="math">I</span><sub>1</sub>、<span class="math">I</span><sub>2</sub>：要比較的兩張影像（已攤平成一串數字）</li>
+          <li style="font-size:20px"><span class="math">p</span>：第幾個像素；<span class="math">I</span><sub>1</sub><sup>p</sup> 是影像 1 在第 p 個位置的數值</li>
+          <li style="font-size:20px">| |：絕對值；Σ<sub>p</sub>：對每一個像素都算一次，再加總</li>
+        </ul>
+      </div>
+      <div class="col">
+        <h3>算一次看看<span class="demo-tag">示意</span></h3>
+        <p class="small" style="margin:4px 0 10px">假設影像只有 4 個像素：</p>
+        <table class="t" style="width:100%">
+          <tr><th></th><th>像素 1</th><th>像素 2</th><th>像素 3</th><th>像素 4</th></tr>
+          <tr><td>影像 <span class="math">I</span><sub>1</sub></td><td>10</td><td>20</td><td>30</td><td>40</td></tr>
+          <tr><td>影像 <span class="math">I</span><sub>2</sub></td><td>12</td><td>20</td><td>25</td><td>50</td></tr>
+          <tr><td>相減取絕對值</td><td>2</td><td>0</td><td>5</td><td>10</td></tr>
+        </table>
+        <p style="font-size:24px;margin-top:14px">L1 距離 = 2 + 0 + 5 + 10 = <b class="hl">17</b></p>
+      </div>
+    </div>
+    <p class="small" style="margin-top:14px">真實的 CIFAR-10 影像有 3,072 個數字，所以一次比較要加總 3,072 項；兩張圖完全一樣時，結果是 0。</p>
+  </div>
+  <div class="src">concepts / k-nearest-neighbor</div>
+</section>
+
+<!-- wiki: concepts/k-nearest-neighbor.md -->
+<section class="slide" data-title="L2 距離與兩者的差別">
+  <svg class="deco" style="right:-30px;top:-30px;width:200px;height:200px;fill:var(--lav)"><use href="#d-star"/></svg>
+  <div class="tag">01 · 第一站 KNN</div>
+  <div class="pad">
+    <h2>怎麼算「有多像」② <em>L2 距離</em></h2>
+    <div class="def" style="margin-top:16px"><span class="k">名詞</span><b>L2 距離</b>：逐個像素相減，<b>平方</b>，全部加起來，再<b>開根號</b>。就是幾何上兩點之間的直線距離（歐氏距離）。</div>
+    <div class="row" style="margin-top:16px;align-items:flex-start;gap:34px">
+      <div style="width:520px">
+        <div class="formula"><i>d</i><sub>2</sub>(<i>I</i><sub>1</sub>, <i>I</i><sub>2</sub>) = √( Σ<sub><i>p</i></sub> (<i>I</i><sub>1</sub><sup><i>p</i></sup> − <i>I</i><sub>2</sub><sup><i>p</i></sup>)<sup>2</sup> )</div>
+        <p style="font-size:20px;margin-top:12px">用上一頁的例子<span class="demo-tag">示意</span>：差值 2、0、5、10 平方後是 4、0、25、100，加總 129，開根號 ≈ 11.4。</p>
+        <p class="small" style="margin-top:8px">實際使用時可以省略開根號：開根號不會改變「誰比較近」的順序，找到的最近鄰居還是同一張。</p>
+      </div>
+      <div class="col">
+        <h3>兩者差在哪？</h3>
+        <p style="font-size:20px;margin:4px 0 10px">L2 對差異<b>比較不寬容</b>：差異被平方之後，大的差異會被放大。所以它寧可接受很多個中等的差異，也不願意接受一個很大的差異。<span class="demo-tag">示意</span></p>
+        <table class="t sm" style="width:100%">
+          <tr><th>兩張圖的差異</th><th>L1</th><th>L2</th></tr>
+          <tr><td>4 個像素各差 5</td><td>5+5+5+5 = 20</td><td>√(25×4) = 10</td></tr>
+          <tr><td>只有 1 個像素差 20</td><td>20</td><td>√400 = <b>20</b></td></tr>
+        </table>
+        <p class="small" style="margin-top:8px">L1 認為兩種情況一樣遠；L2 認為「一個大差異」比較遠。</p>
+      </div>
+    </div>
+    <div class="keybox" style="margin-top:14px;font-size:21px">L1、L2 都屬於同一個距離家族（p-norm）。要用哪一種，沒有標準答案，要實際測試 — 這就是後面要談的 <b>hyperparameter</b>。</div>
+  </div>
+  <div class="src">concepts / k-nearest-neighbor</div>
+</section>
+
+<!-- wiki: concepts/k-nearest-neighbor.md -->
+<section class="slide" data-title="從 NN 到 KNN">
+  <svg class="deco" style="left:-50px;bottom:-50px;width:220px;height:220px;color:var(--pink)"><use href="#d-ring"/></svg>
+  <div class="tag">01 · 第一站 KNN</div>
+  <div class="pad">
+    <h2>從 NN 到 <em>KNN</em>：讓 k 個鄰居投票</h2>
+    <div class="row" style="margin-top:18px;align-items:flex-start;gap:34px">
+      <div class="col">
+        <div class="def"><span class="k">名詞</span><b>KNN（k-Nearest Neighbor）</b>：找出距離最近的 <b>k</b> 張訓練影像，讓它們<b>投票</b>，票數最多的標籤就是答案。k = 1 時就是前面的 Nearest Neighbor。</div>
+        <ul class="check" style="margin-top:14px">
+          <li style="font-size:21px"><b>為什麼要投票？</b>只看最近的一張，很容易被<b>異常值</b>（outlier：混在別類中間的少數資料點）帶偏。例如一個混在藍色群裡的綠點，會在它周圍形成一小塊錯誤的「孤島」。</li>
+          <li style="font-size:21px"><b>k 越大</b>，決策邊界越平滑，越不容易被異常值影響，在新資料上的表現可能比較好。</li>
+          <li style="font-size:21px">CS231n 的建議：實務上幾乎都應該用 KNN，而不是只看一張的 NN。</li>
+        </ul>
+        <div class="def" style="margin-top:12px"><span class="k">名詞</span><b>決策邊界（decision boundary）</b>：把空間分給各個類別的分界線。新資料落在哪一區，就被判成哪一類。</div>
+      </div>
+      <svg viewBox="0 0 440 400" style="width:420px">
+        <rect x="6" y="6" width="428" height="388" rx="22" fill="#fff" stroke="#7e854e" stroke-width="2.5"/>
+        <g id="knn-pts"></g>
+        <circle cx="222" cy="200" r="78" fill="none" stroke="#7e854e" stroke-width="2.5" stroke-dasharray="6 8"/>
+        <g id="knn-lines" stroke="#7e854e" stroke-width="2"></g>
+        <path d="M222 186 l4 9 l10 1 l-7 7 l2 10 l-9 -5 l-9 5 l2 -10 l-7 -7 l10 -1 Z" fill="#414522"/>
+        <text x="22" y="362" font-size="15" fill="#6b6d5e">★ 新的圖片；圓圈內是最近的 k = 5 個鄰居</text>
+        <text x="22" y="382" font-size="15" fill="#6b6d5e">綠 3 票、紅 1 票、藍 1 票 → 判成綠色那一類</text>
+      </svg>
+    </div>
+  </div>
+  <div class="src">concepts / k-nearest-neighbor</div>
+</section>
+
+<!-- wiki: concepts/k-nearest-neighbor.md, datasets/cifar-10.md -->
+<section class="slide" data-title="KNN 的結果">
+  <svg class="deco" style="left:-30px;top:-40px;width:180px;height:270px;fill:var(--yellow)"><use href="#d-halves"/></svg>
+  <div class="tag">01 · 第一站 KNN</div>
+  <div class="pad">
+    <h2>結果：比亂猜好，<em>但遠遠不夠</em></h2>
+    <p class="lead" style="font-size:25px">CS231n 在 CIFAR-10 上用 Nearest Neighbor（k = 1）實際測試的 accuracy：</p>
+    <svg viewBox="0 0 1160 330" style="width:100%;margin-top:14px">
+      <g font-size="24" fill="#2b2c26">
+        <text x="0" y="52">隨機猜測（10 類）</text><rect x="300" y="28" width="78" height="36" rx="10" fill="#d0ecf1"/><text x="392" y="56" font-weight="700">10%</text>
+        <text x="0" y="132">NN，L2 距離</text><rect x="300" y="108" width="276" height="36" rx="10" fill="#b8bd8f"/><text x="590" y="136" font-weight="700">35.4%</text>
+        <text x="0" y="212" font-weight="800" fill="#414522">NN，L1 距離</text><rect x="300" y="188" width="301" height="36" rx="10" fill="#7e854e"/><text x="615" y="216" font-weight="800" fill="#414522">38.6%</text>
+        <text x="0" y="292">人類（估計）</text><rect x="300" y="268" width="733" height="36" rx="10" fill="#fff" stroke="#7e854e" stroke-width="2.5" stroke-dasharray="8 6"/><text x="1047" y="296" font-weight="700">約 94%</text>
+      </g>
+    </svg>
+    <div class="grid2" style="margin-top:10px">
+      <div class="card soft"><p>在這個實驗中，<b>L1 比 L2 好</b>。但這只是這組資料上的結果；要用哪一種距離，要實際測試才知道。</p></div>
+      <div class="card soft"><p>比亂猜好很多，但離人類還很遠。而且每預測一張圖，都要和 <b>50,000 張</b>訓練圖逐一比對。</p></div>
+    </div>
+  </div>
+  <div class="src">concepts / k-nearest-neighbor · datasets / cifar-10</div>
+</section>
+
+<!-- wiki: concepts/k-nearest-neighbor.md -->
+<section class="slide" data-title="像素距離 ≠ 長得像">
+  <svg class="deco" style="right:-30px;top:-30px;width:200px;height:200px;fill:var(--lav)"><use href="#d-star"/></svg>
+  <div class="tag">01 · 第一站 KNN</div>
+  <div class="pad">
+    <h2>為什麼這麼差：<em>像素距離 ≠ 長得像</em></h2>
+    <p class="lead" style="font-size:24px">CS231n 把一張臉平移、遮住、調暗。這三張圖和原圖的 <b>L2 像素距離都一樣</b>：</p>
+    <svg viewBox="0 0 1160 250" style="width:100%;margin-top:6px"><g id="faces"></g></svg>
+    <div class="row" style="margin-top:4px;gap:26px;align-items:flex-start">
+      <div class="col"><ul class="check">
+        <li style="font-size:20px">對人來說，平移和調暗的還是同一張臉，被遮住的那張卻差很多 — 但像素距離分不出來。</li>
+        <li style="font-size:20px">把 CIFAR-10 依 L2 距離排列，影像主要是按<b>整體色調和背景</b>聚在一起：狗和青蛙因為都在白色背景上而靠得很近。</li>
+        <li style="font-size:20px">NN 的示範中，10 張測試圖大約只有 3 張找到同類別的最近鄰；一張馬頭的最近鄰是一輛紅色的車，推測是兩者都有很強的黑色背景。</li>
+      </ul></div>
+      <div class="keybox" style="width:360px;background:var(--yellow)">CS231n 的結論：<br><b style="font-size:30px">必須超越 raw pixel</b><p class="small" style="margin-top:8px;color:var(--ink)">raw pixel＝沒有經過任何處理的原始像素值。光比較它們，抓不到影像裡「是什麼」。</p></div>
+    </div>
+  </div>
+  <div class="src">concepts / k-nearest-neighbor</div>
+</section>
+
+<!-- wiki: concepts/hyperparameter-tuning.md, concepts/overfitting.md -->
+<section class="slide" data-title="Hyperparameter 與 test set">
+  <svg class="deco" style="left:-50px;bottom:-60px;width:230px;height:230px;fill:var(--peach)"><use href="#d-flower"/></svg>
+  <div class="tag">01 · 第一站 KNN</div>
+  <div class="pad">
+    <h2>k 要設多少？— <em>Hyperparameter</em></h2>
+    <div class="def" style="margin-top:16px"><span class="k">名詞</span><b>Hyperparameter（超參數）</b>：無法從資料中直接學到、必須<b>由人來選</b>的設定。例如 KNN 的 k、要用 L1 還是 L2。通常沒有明顯的正確答案，只能多試幾個值，看哪個最好。</div>
+    <p style="font-size:23px;margin-top:16px"><b>那可以拿 test set 來試，看哪個 k 最好嗎？不行。</b></p>
+    <div class="grid2" style="margin-top:10px;gap:24px">
+      <div class="card soft"><h3>比喻：期末考與模擬考</h3><p>test set 就像期末考。如果你反覆看期末考卷，再照考卷內容調整讀書方法，最後考高分也不代表真的學會，只代表你「背了考卷」。</p></div>
+      <div class="card soft"><h3>在機器學習裡</h3><p>依 test set 的表現調 hyperparameter，等於<b>把 test set 當成訓練資料在用</b>（overfit to the test set）。測出來的成績會<b>過度樂觀</b>，真正部署後可能明顯變差。</p></div>
+    </div>
+    <div class="grid2" style="margin-top:14px;gap:24px">
+      <div class="def"><span class="k">名詞</span><b>Overfitting（過擬合）</b>：模型擬合到資料裡的雜訊，而不是背後真正的關係，所以在那份資料上很好、在新資料上變差。</div>
+      <div class="def"><span class="k">名詞</span><b>Generalization（泛化）</b>：模型在<b>沒看過的資料</b>上的表現。test set 只在最後用一次，才能可靠地衡量它。</div>
+    </div>
+  </div>
+  <div class="src">concepts / hyperparameter-tuning · concepts / overfitting</div>
+</section>
+
+<!-- wiki: concepts/hyperparameter-tuning.md, datasets/cifar-10.md -->
+<section class="slide" data-title="Validation set 與 cross-validation">
+  <svg class="deco" style="right:60px;top:40px;width:220px;height:66px;fill:var(--sage)"><use href="#d-scallop"/></svg>
+  <div class="tag">01 · 第一站 KNN</div>
+  <div class="pad">
+    <h2>正確做法：用<em>模擬考</em>選設定</h2>
+    <div class="def" style="margin-top:16px"><span class="k">名詞</span><b>Validation set（驗證集）</b>：從 training set 切出一小部分，當作「假的 test set」，專門用來選 hyperparameter。</div>
+    <svg viewBox="0 0 1160 110" style="width:100%;margin-top:14px">
+      <rect x="0" y="10" width="760" height="60" rx="14" fill="#e6f1d5" stroke="#7e854e" stroke-width="2.5"/><text x="380" y="49" font-size="22" text-anchor="middle" fill="#414522" font-weight="700">training：49,000 張，用來學</text>
+      <rect x="770" y="10" width="170" height="60" rx="14" fill="#fdefc4" stroke="#7e854e" stroke-width="2.5"/><text x="855" y="49" font-size="20" text-anchor="middle" fill="#414522" font-weight="700">validation 1,000</text>
+      <rect x="950" y="10" width="210" height="60" rx="14" fill="#fedbed" stroke="#7e854e" stroke-width="2.5"/><text x="1055" y="49" font-size="20" text-anchor="middle" fill="#414522" font-weight="700">test 10,000</text>
+      <text x="855" y="98" font-size="17" text-anchor="middle" fill="#6b6d5e">模擬考：可以考很多次</text><text x="1055" y="98" font-size="17" text-anchor="middle" fill="#6b6d5e">期末考：最後只用一次</text>
+    </svg>
+    <div class="row" style="margin-top:8px;align-items:flex-start;gap:30px">
+      <div class="col">
+        <p style="font-size:21px">CIFAR-10 的例子：對每個候選的 k（1、3、5、10、20、50、100）都在 validation set 上評估，選出最好的 k，最後只在 test set 上跑一次。</p>
+        <div class="def" style="margin-top:12px"><span class="k">名詞</span><b>Cross-validation（交叉驗證）</b>：訓練資料很少時，只切一份 validation 的結果不穩定。改成輪流讓每一份資料都當一次 validation，再把結果取平均。</div>
+        <p class="small" style="margin-top:8px">CS231n 的 5-fold 實驗圖中，在那份資料上 k ≈ 7 最好。因為 cross-validation 的計算成本高，實務上比較常用單一的 validation split。</p>
+      </div>
+      <svg viewBox="0 0 420 250" style="width:420px"><g id="folds"></g></svg>
+    </div>
+  </div>
+  <div class="src">concepts / hyperparameter-tuning · datasets / cifar-10</div>
+</section>
+
+<!-- wiki: concepts/k-nearest-neighbor.md -->
+<section class="slide" data-title="第一站小結">
+  <svg class="deco" style="right:-40px;bottom:-40px;width:200px;height:200px;fill:var(--peach)"><use href="#d-asterisk"/></svg>
+  <div class="tag">01 · 第一站 KNN · 小結</div>
+  <div class="pad">
+    <h2>第一站小結：KNN 的<em>優點與問題</em></h2>
+    <div class="grid2" style="margin-top:24px;gap:26px">
+      <div class="card"><h3>✓ 優點</h3><ul class="check"><li style="font-size:21px">很簡單，容易實作和理解</li><li style="font-size:21px">訓練時間是零：只需要把資料存起來</li></ul></div>
+      <div class="card" style="background:var(--peach)"><h3>✗ 問題</h3><ul class="star"><li style="font-size:21px"><b>預測很慢</b>：每張新圖都要和全部訓練資料比對</li><li style="font-size:21px"><b>占空間</b>：預測時必須保留整個 training set</li><li style="font-size:21px"><b>像素距離沒有語意</b>：CIFAR-10 上只有 38.6%</li></ul></div>
+    </div>
+    <div class="keybox" style="margin-top:22px;font-size:22px">KNN 的取捨方向是<b>反的</b>：實務上我們更在乎「預測快」，訓練慢一點沒關係。下集的主角深度神經網路剛好相反：<b>訓練很貴，但訓練完之後分類新影像很便宜</b>。</div>
+    <p class="lead" style="font-size:25px;margin-top:20px">→ 下一站的問題：能不能把 50,000 張訓練圖<b>「濃縮」成一小組數字</b>，預測時只用這組數字？</p>
+  </div>
+  <div class="src">concepts / k-nearest-neighbor</div>
+</section>
+
+<!-- ============================ 第二站 Linear classifier ============================ -->
+<!-- wiki: concepts/linear-classifier.md, concepts/k-nearest-neighbor.md -->
+<section class="slide trans" data-title="第二站：Linear classifier（轉場）">
+  <div class="band" style="background:var(--sky)">
+    <div class="st">STATION</div><div class="no">02</div>
+    <h2>Linear<br>classifier</h2>
+    <p class="sub">把資料濃縮成參數</p>
+    <svg class="deco" style="left:60px;bottom:40px;width:250px;height:200px"><use href="#i-book"/></svg>
+  </div>
+  <div class="tbox">
+    <div class="card"><h3>上一站留下的問題</h3><p>KNN 要存下全部訓練資料、每次預測都要逐張比對，而且像素距離抓不到「是什麼」。</p></div>
+    <div class="card"><h3>這一站的想法：parametric approach</h3><p>從訓練資料中<b>提煉出一小組參數</b>，之後只靠這組參數做判斷。比喻：KNN 是帶著整本圖鑑去考試；linear classifier 是讀完圖鑑後，只帶一張<b>重點筆記</b>（權重 W）進考場。</p></div>
+    <div class="card"><h3>這一站要回答</h3><ul class="check"><li>參數長什麼樣子？怎麼用它算出每個類別的分數？</li><li>這些參數可以怎麼理解？它和 KNN 有什麼關係？</li><li>這個方法的極限在哪裡？</li></ul></div>
+    <div><span class="pill">參數 parameter</span><span class="pill">score function</span><span class="pill">權重 W</span><span class="pill">bias b</span><span class="pill">內積</span><span class="pill">模板 template</span></div>
+  </div>
+  <div class="route" data-cur="2"></div>
+  <div class="src" style="left:540px">concepts / linear-classifier</div>
+</section>
+
+<!-- wiki: concepts/linear-classifier.md, datasets/cifar-10.md -->
+<section class="slide" data-title="Score function">
+  <svg class="deco" style="right:-40px;top:-70px;width:250px;height:250px;color:var(--yellow)"><use href="#d-ring"/></svg>
+  <div class="tag">02 · 第二站 Linear classifier</div>
+  <div class="pad">
+    <h2>Score function：<em>像素進去，分數出來</em></h2>
+    <div class="grid2" style="margin-top:16px;gap:20px">
+      <div class="def"><span class="k">名詞</span><b>Score function（分數函數）</b>：把影像的像素，轉成「<b>每個類別一個分數</b>」的函數。分數最高的類別就是答案。</div>
+      <div class="def"><span class="k">名詞</span><b>參數（parameter）</b>：函數裡可以調整的數字。訓練資料是給定的、不能改；我們能調整的只有參數 <b>W</b> 和 <b>b</b>。</div>
+    </div>
+    <svg viewBox="0 0 1160 200" style="width:100%;margin-top:14px">
+      <g font-size="20" fill="#2b2c26" text-anchor="middle">
+        <rect x="10" y="40" width="110" height="110" rx="12" fill="#fff" stroke="#7e854e" stroke-width="2.5"/><path d="M30 120 L55 80 L75 105 L90 85 L105 120 Z" fill="#e6f1d5" stroke="#7e854e" stroke-width="2"/><circle cx="90" cy="65" r="8" fill="#fdefc4" stroke="#7e854e" stroke-width="2"/>
+        <text x="65" y="182">影像</text>
+        <path d="M140 95 h60" stroke="#7e854e" stroke-width="4" marker-end="url(#ah)"/>
+        <rect x="220" y="20" width="44" height="150" rx="8" fill="#fdefc4" stroke="#7e854e" stroke-width="2.5"/><text x="242" y="100" font-size="17" transform="rotate(-90 242 100)">3,072 個數字</text>
+        <text x="242" y="196" font-size="17">x：3072 × 1</text>
+        <text x="300" y="104" font-size="34" fill="#414522">×</text>
+        <rect x="340" y="40" width="300" height="110" rx="10" fill="#e6f1d5" stroke="#7e854e" stroke-width="2.5"/><text x="490" y="102" font-size="22" fill="#414522" font-weight="700">W：10 × 3072</text>
+        <text x="670" y="104" font-size="34" fill="#414522">+</text>
+        <rect x="705" y="40" width="40" height="110" rx="8" fill="#ece4ff" stroke="#7e854e" stroke-width="2.5"/><text x="725" y="182" font-size="17">b：10 × 1</text>
+        <path d="M770 95 h60" stroke="#7e854e" stroke-width="4" marker-end="url(#ah)"/>
+        <rect x="850" y="40" width="40" height="110" rx="8" fill="#fff" stroke="#7e854e" stroke-width="2.5"/><text x="870" y="182" font-size="17">10 個分數</text>
+        <text x="1030" y="104" font-size="32" fill="#414522" font-weight="800" font-style="italic">f(x) = Wx + b</text>
+      </g>
+    </svg>
+    <table class="t sm" style="width:100%;margin-top:6px">
+      <tr><th>符號</th><th>形狀（CIFAR-10）</th><th>意思</th></tr>
+      <tr><td><b>x</b></td><td>3072 × 1</td><td>一張影像攤平成一行（32 × 32 × 3）</td></tr>
+      <tr><td><b>W</b>　權重（weights）</td><td>10 × 3072</td><td>每個類別一列；每一列有 3,072 個權重，對應每一個像素數值</td></tr>
+      <tr><td><b>b</b>　偏差（bias）</td><td>10 × 1</td><td>每個類別一個數字，直接加到分數上，不和像素相乘</td></tr>
+    </table>
+    <p style="font-size:21px;margin-top:12px">好處：學完之後就可以<b>丟掉整個 training set</b>，只保留 W 和 b；分類一張新圖只要<b>一次矩陣乘法加一次加法</b>（下一頁用小例子示範怎麼算）。</p>
+  </div>
+  <div class="src">concepts / linear-classifier · datasets / cifar-10</div>
+</section>
+
+<!-- wiki: concepts/linear-classifier.md -->
+<section class="slide" data-title="一張貓怎麼變成分數">
+  <svg class="deco" style="right:-40px;bottom:-40px;width:200px;height:200px;fill:var(--pink)"><use href="#d-asterisk"/></svg>
+  <div class="tag">02 · 第二站 Linear classifier</div>
+  <div class="pad">
+    <h2>一張貓怎麼<em>變成分數</em></h2>
+    <p class="lead" style="font-size:23px">CS231n 的簡化例子：影像只有 4 個像素，3 個類別。<b>W 的每一列負責一個類別</b>：把那一列的 4 個權重和 4 個像素逐一相乘、加總，再加上那個類別的 b，就是它的分數。</p>
+    <svg viewBox="0 0 1160 300" style="width:100%;margin-top:6px">
+      <g font-size="22" text-anchor="middle" fill="#2b2c26">
+        <g id="wmat"></g>
+        <text x="455" y="160" font-size="34" fill="#414522">×</text>
+        <g id="xvec"></g>
+        <text x="600" y="160" font-size="34" fill="#414522">+</text>
+        <g id="bvec"></g>
+        <text x="742" y="160" font-size="34" fill="#414522">=</text>
+        <g id="svec"></g>
+      </g>
+    </svg>
+    <div class="formula" style="font-size:23px;font-family:var(--body);margin-top:2px">cat 分數 = 0.2×56 + (−0.5)×231 + 0.1×24 + 2.0×2 + 1.1 = <b>−96.8</b></div>
+    <div class="keybox" style="margin-top:12px;font-size:21px">明明是貓，cat 分數卻最低、dog 最高 — 這組 W 很差，模型<b>「深信」這是一隻狗</b>。</div>
+    <p class="note" style="margin-top:8px">註：依圖中的 W、x、b 驗算，ship 應為 60.75（原文寫 61.95，看起來漏加了 bias）。不影響結論。詳見 Wiki 的 linear-classifier 頁。</p>
+  </div>
+  <div class="src">concepts / linear-classifier</div>
+</section>
+
+<!-- wiki: concepts/linear-classifier.md -->
+<section class="slide" data-title="角度①②：加權總和與幾何">
+  <svg class="deco" style="left:-60px;top:-60px;width:220px;height:220px;color:var(--sage)"><use href="#d-target"/></svg>
+  <div class="tag">02 · 第二站 Linear classifier</div>
+  <div class="pad">
+    <h2>W 到底在做什麼？<em>三種理解方式</em>（上）</h2>
+    <div class="grid2" style="margin-top:22px;gap:28px;align-items:stretch">
+      <div class="card"><h3>① 加權總和：喜歡或討厭某些顏色</h3>
+        <svg viewBox="0 0 440 130" style="width:100%;margin:8px 0"><rect x="20" y="10" width="400" height="100" rx="10" fill="#d0ecf1"/><rect x="20" y="10" width="90" height="100" fill="#9cc9d4"/><rect x="330" y="10" width="90" height="100" fill="#9cc9d4"/><path d="M190 85 l30 -24 l30 24 Z" fill="#fff" stroke="#7e854e" stroke-width="2"/><text x="220" y="126" font-size="15" text-anchor="middle" fill="#6b6d5e">ship 可能喜歡圖片兩側的藍色（像是水）</text></svg>
+        <p>每個權重對應「某個位置的某個顏色」。權重是<b>正</b>的，那裡的顏色越強、分數越高（喜歡）；是<b>負</b>的，分數越低（討厭）。例如 ship 的藍色通道權重偏正，紅、綠通道偏負。</p></div>
+      <div class="card"><h3>② 幾何：高維空間中的分界線</h3>
+        <svg viewBox="0 0 440 130" style="width:100%;margin:8px 0"><g fill="#b8bd8f"><circle cx="90" cy="40" r="7"/><circle cx="120" cy="70" r="7"/><circle cx="80" cy="90" r="7"/></g><g fill="#f0b9a8"><circle cx="320" cy="40" r="7"/><circle cx="350" cy="80" r="7"/><circle cx="300" cy="100" r="7"/></g><path d="M190 5 L240 125" stroke="#7e854e" stroke-width="3"/><path d="M215 65 l40 -16" stroke="#7e854e" stroke-width="3" marker-end="url(#ah)"/><text x="262" y="45" font-size="14" fill="#6b6d5e">分數變高</text></svg>
+        <p>把每張影像看成 3,072 維空間中的<b>一個點</b>。W 的每一列對應一條分界線（高維中是超平面）：線上的點分數是 0，沿箭頭方向分數越來越高。改 W 的那一列，線會<b>旋轉</b>；改 b，線會<b>平移</b>。沒有 b 的話，所有線都被迫通過原點。</p></div>
+    </div>
+  </div>
+  <div class="src">concepts / linear-classifier</div>
+</section>
+
+<!-- wiki: concepts/linear-classifier.md, concepts/k-nearest-neighbor.md -->
+<section class="slide" data-title="角度③：模板比對">
+  <svg class="deco" style="right:-40px;top:-30px;width:220px;height:150px;fill:var(--sky)"><use href="#d-blob"/></svg>
+  <div class="tag">02 · 第二站 Linear classifier</div>
+  <div class="pad">
+    <h2>三種理解方式（下）：③ <em>模板比對</em></h2>
+    <div class="grid2" style="margin-top:14px;gap:20px">
+      <div class="def"><span class="k">名詞</span><b>內積（inner product）</b>：兩串一樣長的數字，<b>對應位置相乘，再全部加起來</b>。例如 (1, 2) 和 (3, 4) 的內積是 1×3 + 2×4 = 11<span class="demo-tag">示意</span>。W 的一列和 x 相乘，就是在算內積。</div>
+      <div class="def"><span class="k">名詞</span><b>模板（template）</b>：W 的一列有 3,072 個數字，排回 32 × 32 × 3，就能看成一張「圖」— 這個類別的模板（也叫 prototype）。它是<b>學出來的</b>，不一定是訓練集裡的某一張圖。</div>
+    </div>
+    <p style="font-size:21px;margin-top:12px">影像和模板「亮在同樣的地方」時，對應位置相乘的總和會比較大 → 分數高 → 越吻合。所以算分數，就是拿影像去和每個類別的模板比對。</p>
+    <div class="row" style="margin-top:12px;gap:26px;align-items:flex-start">
+      <table class="t sm" style="flex:1">
+        <tr><th></th><th>KNN</th><th>Linear classifier</th></tr>
+        <tr><td>拿新圖和誰比？</td><td>所有訓練圖（CIFAR-10 是 50,000 張）</td><td><b>每類一張模板</b>，共 10 張</td></tr>
+        <tr><td>「像不像」怎麼算？</td><td>L1／L2 距離，越小越像</td><td>內積，<b>越大越像</b></td></tr>
+        <tr><td>比完之後</td><td>最近的 k 張投票</td><td>分數最高的類別</td></tr>
+      </table>
+      <div class="card soft" style="width:330px"><h3 style="font-size:20px">學出來的模板<span class="demo-tag">示意</span></h3>
+        <svg viewBox="0 0 300 92" style="width:100%"><g stroke="#7e854e" stroke-width="2"><rect x="6" y="6" width="80" height="60" rx="8" fill="#8fc3d6"/><rect x="110" y="6" width="80" height="60" rx="8" fill="#c4e1ea"/><rect x="214" y="6" width="80" height="60" rx="8" fill="#c9cf7a"/></g><g font-size="14" text-anchor="middle" fill="#6b6d5e"><text x="46" y="86">ship：大量藍色</text><text x="150" y="86">plane：偏藍</text><text x="254" y="86">frog：偏黃綠</text></g></svg>
+        <p class="small" style="font-size:15px">依 CS231n 對模板顏色的文字描述重畫</p></div>
+    </div>
+    <div class="keybox" style="margin-top:12px;font-size:20px">所以 CS231n 說：linear classifier <b>其實還是在做 Nearest Neighbor</b>，只是每個類別只保留一張學出來的圖，「距離」改用負的內積（加負號後，內積越大＝距離越小）。</div>
+  </div>
+  <div class="src">concepts / linear-classifier · concepts / k-nearest-neighbor</div>
+</section>
+
+<!-- wiki: concepts/linear-classifier.md, datasets/cifar-10.md -->
+<section class="slide" data-title="極限：兩個頭的馬、紅色的車">
+  <svg class="deco" style="right:-40px;top:-20px;width:240px;height:160px;fill:var(--lav)"><use href="#d-blob"/></svg>
+  <svg class="deco" style="left:-30px;bottom:30px;width:200px;height:120px;color:var(--yellow)"><use href="#d-waves"/></svg>
+  <div class="tag">02 · 第二站 Linear classifier · 小結</div>
+  <div class="pad">
+    <h2>極限：<em>兩個頭的馬、紅色的車</em></h2>
+    <p class="lead" style="font-size:24px">每個類別<b>只能有一張模板</b>，所以同一類裡不同樣子的物體，只能被「混」成一張。</p>
+    <div class="def" style="margin-top:12px"><span class="k">名詞</span><b>模式（mode）</b>：同一類別裡幾種明顯不同的樣子，例如「朝左的馬」和「朝右的馬」。</div>
+    <div class="grid2" style="margin-top:16px">
+      <div class="card"><svg viewBox="0 0 480 150" style="width:100%">
+        <g font-size="38" text-anchor="middle"><text x="70" y="90">🐴</text><text x="160" y="90" transform="scale(-1 1) translate(-320 0)">🐴</text></g>
+        <path d="M230 75 h50" stroke="#7e854e" stroke-width="4" marker-end="url(#ah)"/>
+        <rect x="300" y="15" width="150" height="120" rx="14" fill="#fdefc4" stroke="#7e854e" stroke-width="2.5"/>
+        <g font-size="34" text-anchor="middle" opacity=".75"><text x="345" y="90">🐴</text><text x="405" y="90" transform="scale(-1 1) translate(-810 0)">🐴</text></g>
+      </svg><p>資料中有朝左、朝右的馬 → horse 模板看起來像<b>有兩個頭</b></p></div>
+      <div class="card"><svg viewBox="0 0 480 150" style="width:100%">
+        <g font-size="30"><text x="20" y="55">🚗</text><text x="80" y="55">🚙</text><text x="140" y="55">🚕</text><text x="20" y="115">🚓</text><text x="80" y="115">🚐</text><text x="140" y="115">🚘</text></g>
+        <path d="M230 75 h50" stroke="#7e854e" stroke-width="4" marker-end="url(#ah)"/>
+        <rect x="300" y="15" width="150" height="120" rx="14" fill="#f3c9bd" stroke="#7e854e" stroke-width="2.5"/><text x="375" y="82" font-size="20" text-anchor="middle" fill="#7a2f20" font-weight="700">紅色的 car 模板</text>
+      </svg><p>各種角度、顏色的車 → car 模板變成<b>紅色</b>（暗示資料中紅車比較多）</p></div>
+    </div>
+    <div class="keybox" style="margin-top:16px;font-size:21px">CS231n 的結論：linear classifier <b>太弱</b>，沒辦法好好處理不同顏色的車。它的解法（多個中間偵測器 → 神經網路）留到<b>下集</b>。這一集先處理更基本的問題：<b>W 要怎麼得到？</b></div>
+  </div>
+  <div class="src">concepts / linear-classifier · datasets / cifar-10</div>
+</section>
+
+<!-- ============================ 第三站 Loss ============================ -->
+<!-- wiki: concepts/loss-function.md, concepts/linear-classifier.md -->
+<section class="slide trans" data-title="第三站：Loss（轉場）">
+  <div class="band" style="background:var(--pink)">
+    <div class="st">STATION</div><div class="no">03</div>
+    <h2>Loss：<br>替參數打分數</h2>
+    <p class="sub">把「預測有多糟」變成一個數字</p>
+    <svg class="deco" style="left:60px;bottom:40px;width:220px;height:220px"><use href="#i-trophy"/></svg>
+  </div>
+  <div class="tbox">
+    <div class="card"><h3>上一站留下的問題</h3><p>我們有了 score function，但 W 從哪裡來？剛才那組 W 把貓認成了狗。<b>我們</b>看得出它很糟，<b>電腦</b>卻不知道。</p></div>
+    <div class="card"><h3>這一站的想法</h3><p>要讓電腦<b>自動</b>改進 W，第一步是把「預測有多糟」量化成<b>一個數字</b>：loss。預測越差，loss 越高。有了這個數字，「學習」就變成「找出讓 loss 最小的 W」。</p></div>
+    <div class="card"><h3>這一站要回答</h3><ul class="check"><li>loss 怎麼算？CS231n 介紹兩種最常見的：Multiclass SVM loss、Softmax 的 cross-entropy loss</li><li>能讓 loss 最小的 W 不只一組時，要選哪一組？（regularization）</li></ul></div>
+    <div><span class="pill">loss function</span><span class="pill">data loss</span><span class="pill">margin Δ</span><span class="pill">hinge loss</span><span class="pill">softmax</span><span class="pill">cross-entropy</span><span class="pill">regularization λ</span></div>
+  </div>
+  <div class="route" data-cur="3"></div>
+  <div class="src" style="left:540px">concepts / loss-function · concepts / linear-classifier</div>
+</section>
+
+<!-- wiki: concepts/loss-function.md -->
+<section class="slide" data-title="Loss 的結構">
+  <svg class="deco" style="left:-40px;top:-50px;width:220px;height:220px;fill:var(--sage)"><use href="#d-flower"/></svg>
+  <div class="tag">03 · 第三站 Loss</div>
+  <div class="pad">
+    <h2>Loss function：<em>對預測不滿意的程度</em></h2>
+    <div class="def" style="margin-top:16px"><span class="k">名詞</span><b>Loss function（損失函數，也叫 cost function 或 objective）</b>：一個把「模型在 training set 上的預測有多差」變成<b>一個數字</b>的函數。預測越差，loss 越高。</div>
+    <div class="formula" style="margin-top:20px;font-size:38px"><i>L</i> = <span style="background:var(--yellow);padding:0 8px;border-radius:8px">(1/<i>N</i>) Σ<sub><i>i</i></sub> <i>L<sub>i</sub></i></span> + <span style="background:var(--lav);padding:0 8px;border-radius:8px">λ <i>R</i>(<i>W</i>)</span></div>
+    <div class="grid2" style="margin-top:18px;gap:24px">
+      <div class="card soft" style="background:#fffbea"><h3>Data loss（黃色部分）</h3><p><span class="math">L<sub>i</sub></span>：第 i 張訓練圖的 loss，比較它的分數和正確標籤。<br>(1/N) Σ<sub>i</sub>：把全部 N 張的 loss <b>取平均</b>。<br>衡量：預測和標籤吻不吻合。</p></div>
+      <div class="card soft" style="background:#f7f3ff"><h3>Regularization loss（紫色部分）</h3><p>只看權重 W、和資料無關，用來表達「偏好哪一種 W」。λ 決定它有多重要。<br>先放著，本站後半再介紹。</p></div>
+    </div>
+    <p style="font-size:22px;margin-top:16px"><span class="math">L<sub>i</sub></span> 怎麼定義有很多種選擇。接下來介紹兩種最常見的：<b>Multiclass SVM loss</b> 和 <b>Softmax（cross-entropy）loss</b>。</p>
+  </div>
+  <div class="src">concepts / loss-function</div>
+</section>
+
+<!-- wiki: concepts/loss-function.md -->
+<section class="slide" data-title="Multiclass SVM：定義">
+  <svg class="deco" style="right:-50px;top:-50px;width:220px;height:220px;color:var(--pink)"><use href="#d-ring"/></svg>
+  <div class="tag">03 · 第三站 Loss</div>
+  <div class="pad">
+    <h2>Multiclass SVM loss：<em>正確類別要贏得夠多</em></h2>
+    <p class="lead" style="font-size:24px"><b>想法</b>：正確類別的分數，要比<b>每一個</b>錯誤類別的分數，都<b>至少高出一個固定的差距 Δ</b>。</p>
+    <div class="def" style="margin-top:12px"><span class="k">名詞</span><b>Margin（Δ）</b>：要求正確類別領先的最小差距。領先不到 Δ，就要被扣分。</div>
+    <div class="formula" style="margin-top:16px;font-size:36px"><i>L<sub>i</sub></i> = Σ<sub><i>j</i> ≠ <i>y<sub>i</sub></i></sub> max(0, <i>s<sub>j</sub></i> − <i>s<sub>y<sub>i</sub></sub></i> + Δ)</div>
+    <div class="row" style="margin-top:16px;align-items:flex-start;gap:28px">
+      <ul class="star col">
+        <li style="font-size:20px"><span class="math">s<sub>j</sub></span>：第 j 個類別的分數（score function 算出來的）</li>
+        <li style="font-size:20px"><span class="math">y<sub>i</sub></span>：第 i 張圖的正確類別；<span class="math">s<sub>y<sub>i</sub></sub></span> 就是正確類別的分數</li>
+        <li style="font-size:20px">Σ<sub>j ≠ y<sub>i</sub></sub>：對<b>每一個錯誤類別</b>都算一次，再加起來</li>
+        <li style="font-size:20px">max(0, ·)：取 0 和括號內較大的那個 → 括號內是負的，就當成 0</li>
+      </ul>
+      <div class="keybox" style="width:440px;font-size:20px"><b>白話</b>：括號裡的 <span class="math">s<sub>j</sub></span> − <span class="math">s<sub>y<sub>i</sub></sub></span> + Δ，代表這個錯誤類別「離安全距離還差多少」。<br>領先已經 ≥ Δ → 結果 ≤ 0 → <b>不扣分</b>。<br>領先不到 Δ → 差多少就<b>扣多少</b>。</div>
+    </div>
+  </div>
+  <div class="src">concepts / loss-function</div>
+</section>
+
+<!-- wiki: concepts/loss-function.md -->
+<section class="slide" data-title="Multiclass SVM：逐步計算">
+  <svg class="deco" style="left:-40px;bottom:-40px;width:200px;height:200px;fill:var(--yellow)"><use href="#d-flower"/></svg>
+  <div class="tag">03 · 第三站 Loss</div>
+  <div class="pad">
+    <h2>逐步計算：為什麼 <em>L<sub>i</sub> = 0 + 8</em>？</h2>
+    <p class="lead" style="font-size:23px">CS231n 的例子：三個類別的分數 <b>s = (13, −7, 11)</b>，正確的是<b>第一類</b>，Δ = 10。</p>
+    <svg viewBox="0 0 1160 150" style="width:100%;margin-top:4px">
+      <line x1="40" y1="90" x2="1120" y2="90" stroke="#2b2c26" stroke-width="2.5" marker-end="url(#ah)"/>
+      <g id="svmline"></g>
+    </svg>
+    <ol class="steps" style="margin-top:4px">
+      <li>正確類別的分數：<span class="math">s<sub>y<sub>i</sub></sub></span> = <b>13</b>。要求：每個錯誤類別都要比 13 至少低 10，也就是要 ≤ 3（數線上紅色區域的左邊）。</li>
+      <li>錯誤類別 −7：max(0, −7 − 13 + 10) = max(0, −10) = <b>0</b>。13 比 −7 高出 20，超過要求的 10 → 已達標，不扣分。</li>
+      <li>錯誤類別 11：max(0, 11 − 13 + 10) = max(0, 8) = <b>8</b>。13 雖然比 11 大，但只高出 2，離要求的 10 還差 8 → 扣 8。</li>
+      <li>把每個錯誤類別的結果加起來：<span class="hl" style="font-size:24px"><span class="math">L<sub>i</sub></span> = 0 + 8 = 8</span></li>
+    </ol>
+    <p class="small" style="margin-top:6px">注意：SVM 只在意差距有沒有達到 Δ。只要領先達到 10，結果就是 0；領先得再多，也不會帶來額外的好處。</p>
+  </div>
+  <div class="src">concepts / loss-function</div>
+</section>
+
+<!-- wiki: concepts/loss-function.md, concepts/regularization.md -->
+<section class="slide" data-title="SVM 的兩個細節">
+  <svg class="deco" style="right:-30px;bottom:-30px;width:190px;height:130px;fill:var(--sage)"><use href="#d-checker"/></svg>
+  <div class="tag">03 · 第三站 Loss</div>
+  <div class="pad">
+    <h2>SVM loss 的<em>兩個細節</em></h2>
+    <div class="grid2" style="margin-top:24px;gap:28px;align-items:stretch">
+      <div class="card"><h3>① 名稱：hinge loss</h3>
+        <svg viewBox="0 0 440 150" style="width:100%;margin:6px 0"><line x1="20" y1="120" x2="420" y2="120" stroke="#bbb" stroke-width="2"/><line x1="220" y1="10" x2="220" y2="140" stroke="#bbb" stroke-width="2"/><path d="M20 120 L220 120 L330 20" fill="none" stroke="#414522" stroke-width="5" stroke-linejoin="round"/><text x="226" y="142" font-size="15" fill="#6b6d5e">0</text><text x="300" y="70" font-size="16" fill="#414522" font-weight="700">max(0, ·)</text><text x="40" y="108" font-size="15" fill="#6b6d5e">負的部分 → 一律是 0</text></svg>
+        <p>max(0, ·) 這種「在 0 截斷」的函數叫 <b>hinge loss</b>（像門的鉸鏈，在 0 折一下）。另有 <b>squared hinge loss</b>：改用 max(0, ·)²，沒達到 margin 時懲罰更重；不平方的版本比較標準，但有些資料集平方版效果更好，可以用 cross-validation 決定。</p></div>
+      <div class="card"><h3>② Δ 要設多少？直接設 1.0</h3>
+        <p>這不需要調。原因：</p>
+        <ul class="check" style="margin-top:6px">
+          <li style="font-size:20px">W 的大小會直接影響分數之間的差距：把 W 整體放大，差距就放大；縮小，差距就縮小。</li>
+          <li style="font-size:20px">所以 margin 設 1 還是 100，在某種意義上沒有差別 — W 可以任意縮放。</li>
+          <li style="font-size:20px">真正要調的，是允許 W 長到多大，也就是本站後半的 <b>λ</b>。Δ 和 λ 控制的其實是同一個取捨。</li>
+        </ul></div>
+    </div>
+  </div>
+  <div class="src">concepts / loss-function · concepts / regularization</div>
+</section>
+
+<!-- wiki: concepts/softmax-cross-entropy.md, concepts/loss-function.md -->
+<section class="slide" data-title="為什麼需要 Softmax">
+  <svg class="deco" style="right:-60px;top:-60px;width:250px;height:250px;color:var(--sky)"><use href="#d-ring"/></svg>
+  <div class="tag">03 · 第三站 Loss</div>
+  <div class="pad">
+    <h2>為什麼還需要 <em>Softmax</em>？</h2>
+    <div class="row" style="margin-top:18px;gap:30px;align-items:stretch">
+      <div class="card col" style="background:#fff"><h3>SVM 留下的不方便</h3><p>SVM 給的是<b>沒有校準過的分數</b>（數值大小沒有固定的意義）。例如 cat、dog、ship 得到 (12.5, 0.6, −23.0)。12.5 代表模型有多大把握？分數本身<b>不容易解讀</b>。</p></div>
+      <div style="align-self:center;font-size:40px;color:var(--olive)">→</div>
+      <div class="card col" style="background:var(--sage)"><h3>Softmax 的做法</h3><p>把分數轉成<b>每個值都在 0～1 之間、加總為 1</b> 的數字，例如 (0.9, 0.09, 0.01)。一眼就看得出模型對每個類別有多少信心。</p></div>
+    </div>
+    <h3 style="margin-top:24px">兩個好處</h3>
+    <div class="grid2" style="margin-top:10px;gap:24px">
+      <div class="card soft"><h3>① 可以解讀</h3><p>輸出像「機率」，可以看成模型對每個類別的<b>信心程度</b>（不過這個「機率」要打引號，原因在本站後面說明）。</p></div>
+      <div class="card soft"><h3>② 永遠不滿足</h3><p>SVM 只要 margin 達標就不再在意；Softmax 的 loss 會一直督促「<b>正確類別的機率再高一點</b>」— 正確類別的機率永遠可以再高一點。</p></div>
+    </div>
+    <p class="small" style="margin-top:14px">Softmax classifier＝同樣的 score function <span class="math">Wx</span>，只是換成用 softmax 解讀分數、用 cross-entropy 當 loss。接下來兩頁分別介紹。</p>
+  </div>
+  <div class="src">concepts / softmax-cross-entropy · concepts / loss-function</div>
+</section>
+
+<!-- wiki: concepts/softmax-cross-entropy.md, concepts/regularization.md -->
+<section class="slide" data-title="Softmax 怎麼算">
+  <svg class="deco" style="left:-50px;bottom:-50px;width:220px;height:220px;fill:var(--peach)"><use href="#d-asterisk"/></svg>
+  <div class="tag">03 · 第三站 Loss</div>
+  <div class="pad">
+    <h2>Softmax 函數：<em>先取指數，再除以總和</em></h2>
+    <div class="row" style="margin-top:16px;gap:30px;align-items:center">
+      <div class="formula" style="font-size:36px;width:400px"><i>f<sub>j</sub></i>(<i>z</i>) = <span style="display:inline-block;vertical-align:middle;text-align:center"><span style="display:block;border-bottom:2px solid currentColor;padding:0 6px"><i>e</i><sup><i>z<sub>j</sub></i></sup></span><span style="display:block;padding:0 6px">Σ<sub><i>k</i></sub> <i>e</i><sup><i>z<sub>k</sub></i></sup></span></span></div>
+      <ol class="steps col">
+        <li><b>取指數</b> <span class="math">e<sup>z</sup></span>：每個分數都變成正數，原本大的還是比較大。</li>
+        <li><b>正規化（normalize）</b>：每個數除以全部的總和 → 每個值在 0～1 之間，而且加起來剛好是 1。</li>
+      </ol>
+    </div>
+    <svg viewBox="0 0 1160 250" style="width:100%;margin-top:10px"><g id="softmax"></g></svg>
+    <div class="def"><span class="k">用語</span>這裡的「<b>正規化（normalize）</b>」是指「除以總和，讓加總變成 1」。它和本站後半的 <b>regularization</b>（中文也常譯為正規化）是<b>完全不同</b>的東西，所以本簡報都會附上英文。</div>
+  </div>
+  <div class="src">concepts / softmax-cross-entropy · concepts / regularization</div>
+</section>
+
+<!-- wiki: concepts/softmax-cross-entropy.md -->
+<section class="slide" data-title="Cross-entropy loss">
+  <svg class="deco" style="right:-40px;top:-40px;width:210px;height:210px;fill:var(--lav)"><use href="#d-star"/></svg>
+  <div class="tag">03 · 第三站 Loss</div>
+  <div class="pad">
+    <h2>Cross-entropy loss：<em>正確答案的機率越高越好</em></h2>
+    <div class="def" style="margin-top:16px"><span class="k">名詞</span><b>Cross-entropy loss（交叉熵損失）</b>：先用 softmax 算出<b>正確類別的機率 p</b>，loss 就是 <b>−log p</b>（log 是自然對數）。</div>
+    <div class="row" style="margin-top:16px;gap:30px;align-items:flex-start">
+      <div class="col">
+        <h3>為什麼用 −log p？</h3>
+        <ul class="check" style="margin-top:6px">
+          <li style="font-size:21px">p = 1（模型完全確定正確答案）→ −log 1 = <b>0</b>，沒有 loss</li>
+          <li style="font-size:21px">p 越接近 0 → loss 越大，而且<b>沒有上限</b></li>
+          <li style="font-size:21px">所以：模型給正確答案的機率越高，loss 就越低</li>
+        </ul>
+        <div class="keybox" style="margin-top:16px;font-size:21px">上一頁的例子：正確類別是<b>第三類</b>，p = 0.353<br>→ <span class="math">L<sub>i</sub></span> = −log(0.353) = <b>1.04</b></div>
+        <p class="small" style="margin-top:12px">名稱：SVM classifier 用 hinge loss；Softmax classifier 用 cross-entropy loss。「softmax loss」是很常見的簡稱，但不精確 — softmax 只是把分數壓成機率的那一步，不是 loss。</p>
+      </div>
+      <svg viewBox="0 0 460 360" style="width:450px"><rect x="2" y="2" width="456" height="356" rx="22" fill="#fff" stroke="#7e854e" stroke-width="2.5"/><g id="nlog"></g></svg>
+    </div>
+  </div>
+  <div class="src">concepts / softmax-cross-entropy</div>
+</section>
+
+<!-- wiki: concepts/loss-function.md -->
+<section class="slide" data-title="SVM vs Softmax">
+  <svg class="deco" style="left:-30px;top:-40px;width:180px;height:270px;fill:var(--sky)"><use href="#d-halves"/></svg>
+  <div class="tag">03 · 第三站 Loss</div>
+  <div class="pad">
+    <h2>SVM vs Softmax：<em>同樣的分數，不同的解讀</em></h2>
+    <table class="t sm" style="width:100%;margin-top:18px">
+      <tr><th></th><th>Multiclass SVM</th><th>Softmax</th></tr>
+      <tr><td>怎麼看分數</td><td>類別分數，沒有校準過</td><td>未正規化（unnormalized）的 log 機率：取指數、除以總和之後，才變成「機率」</td></tr>
+      <tr><td>loss</td><td>hinge loss</td><td>cross-entropy loss</td></tr>
+      <tr><td>什麼時候滿意</td><td>margin 達標就滿意，不再管細節</td><td><b>永遠不滿足</b>：正確類別的機率永遠可以再高一點</td></tr>
+    </table>
+    <div class="grid2" style="margin-top:18px;gap:24px">
+      <div class="card soft"><h3>例子：分數 (10, −2, 3)，第一類正確，Δ = 1</h3><p>SVM：margin 已經滿足，loss = 0。就算分數改成 (10, −100, −100) 或 (10, 9, 9)，SVM 也一樣是 0。<br>Softmax：(10, 9, 9) 的 loss 會比 (10, −100, −100) <b>高很多</b>。</p><p class="small" style="margin-top:6px">SVM 的這個性質也可以看成優點：例如 car 分類器應該把力氣花在區分汽車和卡車，而不是被早就給了很低分的青蛙影響。</p></div>
+      <div class="card soft"><h3>兩種 loss 的數字不能互相比較</h3><p>對同一筆資料，筆記算出 SVM loss 是 <b>1.58</b>、Softmax loss 是 <b>1.04</b>。這<b>不代表</b> Softmax 比較好 — 只有在同一種 loss、同一份資料內比較才有意義。</p><p class="small" style="margin-top:6px">實務上兩者的表現通常差不多。</p></div>
+    </div>
+  </div>
+  <div class="src">concepts / loss-function</div>
+</section>
+
+<!-- wiki: concepts/regularization.md -->
+<section class="slide" data-title="W 不只一組">
+  <svg class="deco" style="right:-50px;top:-50px;width:230px;height:230px;fill:var(--yellow)"><use href="#d-flower"/></svg>
+  <div class="tag">03 · 第三站 Loss</div>
+  <div class="pad">
+    <h2>還有一個問題：<em>好的 W 不只一組</em></h2>
+    <p class="lead" style="font-size:23px">假設某組 W 已經把每張訓練圖都分對，而且 margin 都達標，每個 <span class="math">L<sub>i</sub></span> = 0。現在把 W 全部乘以 2：</p>
+    <svg viewBox="0 0 1160 215" style="width:100%;margin-top:6px"><g id="w2demo"></g></svg>
+    <p style="font-size:22px;margin-top:6px">所有分數都變成 2 倍，差距也跟著變 2 倍（例如 15 → 30），margin 照樣達標，loss 還是 0。也就是說，能讓 loss = 0 的 W 有<b>無限多組</b>。要選哪一組？</p>
+    <div class="def" style="margin-top:14px"><span class="k">名詞</span><b>Regularization（正規化）</b>：在 loss 裡額外加上一項<b>只跟權重有關、跟資料無關</b>的懲罰 <span class="math">R</span>(<span class="math">W</span>)，用來表達「我們偏好哪一種 W」。這就是前面 loss 公式的紫色部分。</div>
+    <div class="card soft" style="margin-top:14px"><p><b>比喻</b>：兩個學生考試都拿滿分。一個每一科都理解了，另一個只靠背某幾題的答案。只看分數分不出差別，但遇到新題目時，前者比較可靠。Regularization 就是在「答對」之外，再加一條偏好：<b>不要過度依賴少數幾個特徵</b>。</p></div>
+  </div>
+  <div class="src">concepts / regularization</div>
+</section>
+
+<!-- wiki: concepts/regularization.md, concepts/k-nearest-neighbor.md -->
+<section class="slide" data-title="L2 regularization">
+  <svg class="deco" style="left:-30px;bottom:-30px;width:180px;height:270px;fill:var(--lav)"><use href="#d-halves"/></svg>
+  <div class="tag">03 · 第三站 Loss</div>
+  <div class="pad">
+    <h2>最常見的懲罰：<em>L2 regularization</em></h2>
+    <div class="row" style="margin-top:14px;gap:26px;align-items:flex-start">
+      <div class="col">
+        <div class="def"><span class="k">名詞</span><b>L2 regularization</b>：把 W 的<b>每一個元素平方，再全部加起來</b>，當作懲罰：</div>
+        <div class="formula" style="margin-top:10px"><i>R</i>(<i>W</i>) = Σ<sub><i>k</i></sub> Σ<sub><i>l</i></sub> <i>W</i><sub><i>k,l</i></sub><sup>2</sup></div>
+        <p class="small" style="margin-top:8px">名稱裡的 L2，和 KNN 那一站的 L2 距離一樣，都是「平方再加總」的算法（這裡是平方的 L2 norm，不開根號）。</p>
+        <div class="def" style="margin-top:12px"><span class="k">名詞</span><b>λ（regularization strength）</b>：決定懲罰項有多重要的 hyperparameter。沒有簡單的設定方式，通常用 cross-validation 決定。</div>
+      </div>
+      <div style="width:580px">
+        <table class="t sm" style="width:100%;font-size:17px">
+          <tr><th colspan="3">例：輸入 x = (1, 1, 1, 1)</th></tr>
+          <tr><td><b>w₁ = (1, 0, 0, 0)</b><br><span class="small">只看第一個維度</span></td><td>內積 = 1</td><td style="white-space:nowrap">R = 1² + 0² + 0² + 0²<br>= <b>1.0</b></td></tr>
+          <tr><td><b>w₂ = (0.25, 0.25, 0.25, 0.25)</b><br><span class="small">平均看所有維度</span></td><td>內積 = 1</td><td style="white-space:nowrap">R = 4 × 0.25²<br>= <b>0.25</b> ✓</td></tr>
+        </table>
+        <p style="font-size:20px;margin-top:10px">兩者的預測<b>完全一樣</b>，但 L2 penalty 偏好 w₂：每個輸入維度都考慮一點，而不是強烈依賴少數幾個。這通常能改善在 test 影像上的泛化表現、減少 <b>overfitting</b>。</p>
+      </div>
+    </div>
+    <div class="keybox" style="margin-top:16px;font-size:21px">完整的 loss：<span class="math">L</span> = (1/N) Σ<sub>i</sub> <span class="math">L<sub>i</sub></span> + λ<span class="math">R</span>(<span class="math">W</span>)。加上 regularization 之後，loss <b>不可能剛好是 0</b>（除非 W 全是 0）— 它的目的本來就不是讓 training loss 更低，而是讓模型在新資料上更好。</div>
+  </div>
+  <div class="src">concepts / regularization · concepts / k-nearest-neighbor</div>
+</section>
+
+<!-- wiki: concepts/softmax-cross-entropy.md, concepts/regularization.md -->
+<section class="slide" data-title="「機率」為什麼要加引號">
+  <svg class="deco" style="right:-60px;bottom:-60px;width:240px;height:240px;color:var(--pink)"><use href="#d-ring"/></svg>
+  <div class="tag">03 · 第三站 Loss</div>
+  <div class="pad">
+    <h2>Softmax 的「機率」為什麼<em>要加引號</em>？</h2>
+    <p class="lead" style="font-size:23px">回到 Softmax。它的輸出看起來像機率，但有多集中，會隨<b>權重的大小</b>改變：</p>
+    <table class="t" style="width:100%;margin-top:14px">
+      <tr><th></th><th>分數</th><th>取指數</th><th>正規化（normalize）後的「機率」</th></tr>
+      <tr><td>原本的權重</td><td>(1, −2, 0)</td><td>(2.71, 0.14, 1)</td><td><b>(0.7, 0.04, 0.26)</b></td></tr>
+      <tr><td>權重全部減半</td><td>(0.5, −1, 0)</td><td>(1.65, 0.37, 1)</td><td><b>(0.55, 0.12, 0.33)</b>：變得更分散</td></tr>
+    </table>
+    <ol class="steps" style="margin-top:14px">
+      <li>分數是 W 乘上 x 算出來的。W 全部減半，分數也全部減半 → 同一張圖的「機率」變得更平均。</li>
+      <li>W 有多大，又受 regularization 控制：<b>λ 越大 → 權重越小 → 「機率」越平均</b>；權重趨近 0 時，輸出接近均勻分布。</li>
+      <li>所以同一張圖，換一個 λ 訓練，「機率」就會不一樣。</li>
+    </ol>
+    <div class="keybox" style="margin-top:12px;font-size:21px">結論：把 softmax 的輸出看成<b>信心程度</b>。和 SVM 一樣，<b>分數的排序可以解讀，絕對數值不能直接解讀</b>。輸出 0.9，不代表「有 90% 的機率是對的」。</div>
+  </div>
+  <div class="src">concepts / softmax-cross-entropy · concepts / regularization</div>
+</section>
+
+<!-- wiki: concepts/loss-function.md, concepts/regularization.md, concepts/gradient-descent.md -->
+<section class="slide" data-title="第三站小結">
+  <svg class="deco" style="left:-50px;top:-50px;width:200px;height:200px;fill:var(--pink)"><use href="#d-asterisk"/></svg>
+  <div class="tag">03 · 第三站 Loss · 小結</div>
+  <div class="pad">
+    <h2>第三站小結：<em>一組 W 怎麼得到一個分數</em></h2>
+    <svg viewBox="0 0 1160 330" style="width:100%;margin-top:14px"><g id="lossflow"></g></svg>
+    <div class="grid2" style="margin-top:8px;gap:24px">
+      <div class="card soft"><p><b>data loss</b>：比較分數和正確標籤，可以選 SVM（hinge loss）或 Softmax（cross-entropy loss）。<br><b>regularization loss</b>：只看 W，表達對「小而分散」權重的偏好。</p></div>
+      <div class="card soft" style="background:var(--yellow)"><p>現在，<b>給任何一組 W，都能算出一個數字 L</b>，表示它有多差。<br>→ 下一站的問題：W 有 30,730 個數字，<b>怎麼找到讓 L 最小的那一組？</b></p></div>
+    </div>
+  </div>
+  <div class="src">concepts / loss-function · concepts / regularization · concepts / gradient-descent</div>
+</section>
+
+<!-- ============================ 第四站 Optimization ============================ -->
+<!-- wiki: concepts/optimization.md, datasets/cifar-10.md -->
+<section class="slide trans" data-title="第四站：Optimization（轉場）">
+  <div class="band" style="background:var(--lav)">
+    <div class="st">STATION</div><div class="no">04</div>
+    <h2>Optimization：<br>把參數調好</h2>
+    <p class="sub">讓電腦自己找出好的 W</p>
+    <svg class="deco" style="left:50px;bottom:40px;width:270px;height:200px"><use href="#i-hike"/></svg>
+  </div>
+  <div class="tbox">
+    <div class="card"><h3>上一站留下的問題</h3><p>我們能替任何一組 W 打分數了。但要找出 loss 最小的那組：CIFAR-10 的 W 加上 b 共有 <b>30,730 個數字</b>（10 × 3072 個權重 + 10 個 bias），不可能把每種組合都試一遍。</p></div>
+    <div class="card"><h3>這一站的想法</h3><p><b>Optimization（最佳化）</b>：找出讓 loss 最小的參數。關鍵在於：一次找到最好的 W 非常困難；但把<b>目前的 W 改好一點</b>就簡單得多 → 從隨機的 W 出發，一步一步改進。</p></div>
+    <div class="card"><h3>這一站要回答</h3><ul class="check"><li>每一步該往哪個方向改？（gradient）一次改多少？（learning rate）</li><li>每一步要看多少資料？（mini-batch）</li><li>gradient 要怎麼算得又快又準？（backpropagation）</li></ul></div>
+    <div><span class="pill">optimization</span><span class="pill">gradient</span><span class="pill">gradient descent</span><span class="pill">learning rate</span><span class="pill">mini-batch／SGD</span><span class="pill">backpropagation</span></div>
+  </div>
+  <div class="route" data-cur="4"></div>
+  <div class="src" style="left:540px">concepts / optimization · datasets / cifar-10</div>
+</section>
+
+<!-- wiki: concepts/optimization.md -->
+<section class="slide" data-title="蒙眼下山">
+  <svg class="deco" style="right:-40px;top:-40px;width:210px;height:210px;fill:var(--peach)"><use href="#d-star"/></svg>
+  <div class="tag">04 · 第四站 Optimization</div>
+  <div class="pad">
+    <h2>CS231n 的比喻：<em>蒙著眼睛下山</em></h2>
+    <div class="row" style="margin-top:18px;align-items:flex-start;gap:30px">
+      <div class="col">
+        <table class="t sm" style="width:100%">
+          <tr><th>比喻</th><th>對應到學習</th></tr>
+          <tr><td>你站的位置</td><td>目前的參數 W</td></tr>
+          <tr><td>腳下的高度</td><td>這組 W 的 loss</td></tr>
+          <tr><td>走到谷底</td><td>找到 loss 最小的 W</td></tr>
+          <tr><td>蒙著眼睛</td><td>看不到整片地形，只能感覺腳下</td></tr>
+        </table>
+        <p style="font-size:20px;margin-top:14px">在 CIFAR-10 上，這片丘陵是 <b>30,730 維</b>的，沒辦法畫出來。CS231n 沿著隨機的方向切一刀，看 loss 怎麼變化：</p>
+        <ul class="check">
+          <li style="font-size:20px">只看<b>一張圖</b>的 SVM loss：由幾段直線組成的折線（分段線性）</li>
+          <li style="font-size:20px">平均 <b>100 張圖</b>：變成一個平滑的<b>碗</b>，中間低、四周高。這種碗狀的函數叫 <b>convex（凸）函數</b>，已經有大量研究知道怎麼有效地最小化它。</li>
+        </ul>
+      </div>
+      <div style="width:440px">
+        <svg viewBox="0 0 440 340" style="width:100%"><g id="bowl"></g></svg>
+        <p class="small" style="margin-top:4px">之後換成神經網路，loss 會變成 <b>non-convex</b>：不再是一個碗，而是凹凸不平的地形（下集）。</p>
+      </div>
+    </div>
+  </div>
+  <div class="src">concepts / optimization</div>
+</section>
+
+<!-- wiki: concepts/optimization.md, concepts/linear-classifier.md -->
+<section class="slide" data-title="前兩種策略">
+  <svg class="deco" style="left:-40px;bottom:-40px;width:200px;height:200px;fill:var(--lav)"><use href="#d-flower"/></svg>
+  <div class="tag">04 · 第四站 Optimization</div>
+  <div class="pad">
+    <h2>怎麼下山？<em>先試兩個笨方法</em></h2>
+    <p class="lead" style="font-size:23px">用 SVM loss 訓練 CIFAR-10 上的 linear classifier，兩種方法都只評估 1000 次 loss：</p>
+    <div class="grid3" style="margin-top:18px;gap:22px">
+      <div class="card"><h3>策略 #1：隨便跳</h3><p><b>Random search</b>：隨機產生 1000 組 W，留下 loss 最低的那組。<br>比喻：隨便跳到 1000 個地方，記住最低的那個。</p><p class="bignum" style="margin-top:10px">約 15.5%</p><p class="small">test accuracy</p></div>
+      <div class="card"><h3>策略 #2：伸腳試探</h3><p><b>Random local search</b>：從隨機的 W 出發，每次加上一個隨機的小改變，loss 變低才接受。<br>比喻：往隨機方向伸出一隻腳，往下才走過去。</p><p class="bignum" style="margin-top:10px">21.4%</p><p class="small">test accuracy；比較好，但浪費、計算成本高</p></div>
+      <div class="card" style="background:var(--sage)"><h3>策略 #3：感覺坡度</h3><p><b>Following the gradient</b>：不用隨機找方向，直接算出<b>最陡的下坡方向</b>，往那裡走。<br>比喻：用腳感覺地面往哪邊傾斜。</p><p class="small" style="margin-top:10px">→ 下一頁：什麼是 gradient</p></div>
+    </div>
+    <div class="keybox" style="margin-top:18px;font-size:20px">15.5% 和 21.4% 反映的是<b>最佳化方法很差</b>，不是 linear classifier 的能力上限。三種策略的共同想法是 <b>iterative refinement（逐步改進）</b>：從隨機的 W 出發，一步一步讓 loss 變低。</div>
+  </div>
+  <div class="src">concepts / optimization · concepts / linear-classifier</div>
+</section>
+
+<!-- wiki: concepts/gradient-descent.md -->
+<section class="slide" data-title="Gradient">
+  <svg class="deco" style="right:-50px;top:-50px;width:220px;height:220px;color:var(--sage)"><use href="#d-target"/></svg>
+  <div class="tag">04 · 第四站 Optimization</div>
+  <div class="pad">
+    <h2>感覺坡度：<em>什麼是 gradient</em></h2>
+    <div class="row" style="margin-top:14px;align-items:flex-start;gap:30px">
+      <div class="col">
+        <div class="def"><span class="k">名詞</span><b>斜率（導數）</b>：一維函數 f(x) 在某一點的瞬間變化率 — x 往右動一點點時，f 跟著變化多少。</div>
+        <div class="formula" style="margin-top:10px;font-size:28px"><i>df</i>(<i>x</i>)/<i>dx</i> = lim<sub><i>h</i>→0</sub> [<i>f</i>(<i>x</i>+<i>h</i>) − <i>f</i>(<i>x</i>)] / <i>h</i></div>
+        <p class="small" style="margin-top:6px">h 是「一點點」：把 x 加上 h，看 f 變了多少，再除以 h；數學上 h 要趨近於 0。</p>
+        <div class="def" style="margin-top:12px"><span class="k">名詞</span><b>Gradient（梯度）</b>：輸入有很多個數字時（例如 W 的 30,730 個），對<b>每一個</b>數字各算一個斜率（叫 partial derivative，偏導數），排成一個向量，就是 gradient。</div>
+      </div>
+      <div style="width:450px">
+        <svg viewBox="0 0 450 330" style="width:100%"><rect x="2" y="2" width="446" height="326" rx="22" fill="#fff" stroke="#7e854e" stroke-width="2.5"/><g id="slope"></g></svg>
+      </div>
+    </div>
+    <div class="keybox" style="margin-top:14px;font-size:21px">gradient 指向函數<b>上升最陡</b>的方向。我們要讓 loss <b>下降</b>，所以往 <b>負 gradient</b> 的方向走。（SVM 的 max 會造成折角，嚴格來說不可微，實務上用 subgradient，當成 gradient 使用即可。）</div>
+  </div>
+  <div class="src">concepts / gradient-descent</div>
+</section>
+
+<!-- wiki: concepts/gradient-descent.md -->
+<section class="slide" data-title="Gradient descent">
+  <svg class="deco" style="left:-30px;bottom:-30px;width:180px;height:270px;fill:var(--yellow)"><use href="#d-halves"/></svg>
+  <div class="tag">04 · 第四站 Optimization</div>
+  <div class="pad">
+    <h2><em>Gradient descent</em>：算坡度，走一小步，重複</h2>
+    <div class="def" style="margin-top:14px"><span class="k">名詞</span><b>Gradient descent（梯度下降）</b>：反覆做兩件事 — 算出 loss 對參數的 gradient，再往 gradient 的<b>反方向</b>走一小步。</div>
+    <div class="row" style="margin-top:16px;align-items:flex-start;gap:30px">
+      <div style="width:440px">
+        <div class="card" style="background:#2f3127;border-color:#2f3127;color:#f2efe4;font-family:var(--mono);font-size:18px;line-height:1.7">
+          <span style="color:#b8bd8f"># CS231n：所有神經網路函式庫的核心</span><br>while True:<br>&nbsp;&nbsp;weights_grad = evaluate_gradient(<br>&nbsp;&nbsp;&nbsp;&nbsp;loss_fun, data, weights)<br>&nbsp;&nbsp;weights += - step_size * weights_grad</div>
+        <ul class="star" style="margin-top:12px">
+          <li style="font-size:19px">第 2 行：用目前的 weights 和資料，算出 gradient</li>
+          <li style="font-size:19px">第 4 行：往<b>負</b> gradient 走一步；step_size 決定步伐大小</li>
+        </ul>
+      </div>
+      <div class="col">
+        <h3>訓練時，資訊怎麼流動</h3>
+        <svg viewBox="0 0 640 300" style="width:100%"><g id="infoflow"></g></svg>
+      </div>
+    </div>
+  </div>
+  <div class="src">concepts / gradient-descent</div>
+</section>
+
+<!-- wiki: concepts/gradient-descent.md -->
+<section class="slide" data-title="怎麼算 gradient">
+  <svg class="deco" style="right:-40px;bottom:-40px;width:200px;height:200px;fill:var(--sage)"><use href="#d-flower"/></svg>
+  <div class="tag">04 · 第四站 Optimization</div>
+  <div class="pad">
+    <h2>gradient 怎麼算？<em>兩種方法</em></h2>
+    <table class="t sm" style="width:100%;margin-top:18px">
+      <tr><th></th><th>Numerical gradient（數值梯度）</th><th>Analytic gradient（解析梯度）</th></tr>
+      <tr><td>做法</td><td>每個參數各加上一個很小的 h（例如 1e-5），看 loss 變了多少</td><td>用微積分推導出 gradient 的公式，直接代入計算</td></tr>
+      <tr><td>精確度</td><td>近似值（h 不可能真的是 0）</td><td>精確</td></tr>
+      <tr><td>速度</td><td><b>很慢</b>：計算量和參數數量成正比</td><td><b>很快</b></td></tr>
+      <tr><td>缺點</td><td>無法擴展到大模型</td><td>推導和實作<b>容易出錯</b></td></tr>
+    </table>
+    <div class="grid2" style="margin-top:18px;gap:24px">
+      <div class="card soft"><h3>numerical 有多慢？</h3><p>CIFAR-10 的 linear classifier 有 30,730 個參數，每個參數都要各算一次 loss，再加上原本那一次 → <b>光是走一步，就要評估 30,731 次 loss</b>。現代神經網路動輒數千萬個參數，根本無法這樣做。</p></div>
+      <div class="card soft" style="background:var(--sage)"><h3>實務上的標準做法：gradient check</h3><p>實際訓練用 <b>analytic gradient</b>（快），再拿 numerical gradient 和它<b>比對</b>，確認公式和程式寫對了。至於 analytic gradient 怎麼有效率地算 → 本站後半的 <b>backpropagation</b>。</p></div>
+    </div>
+  </div>
+  <div class="src">concepts / gradient-descent</div>
+</section>
+
+<!-- wiki: concepts/gradient-descent.md, concepts/hyperparameter-tuning.md -->
+<section class="slide" data-title="Learning rate">
+  <svg class="deco" style="right:-50px;top:-50px;width:220px;height:220px;color:var(--sage)"><use href="#d-target"/></svg>
+  <div class="tag">04 · 第四站 Optimization</div>
+  <div class="pad">
+    <h2>一步要走多遠？<em>Learning rate</em></h2>
+    <div class="row" style="margin-top:16px;align-items:flex-start;gap:30px">
+      <div style="width:470px">
+        <div class="def"><span class="k">名詞</span><b>Learning rate（學習率，也叫 step size）</b>：gradient 只告訴我們<b>方向</b>，沒有告訴我們要走多遠。每一步走多遠，就是 learning rate。</div>
+        <p style="font-size:20px;margin-top:14px">CS231n 從同一組隨機的 W 出發（loss 2.200718），試不同的 step size 各走一步：</p>
+        <ul class="check" style="margin-top:6px">
+          <li style="font-size:20px"><b>太小</b>（1e-10）：穩定，但幾乎沒進展（2.200652）</li>
+          <li style="font-size:20px"><b>剛好</b>（1e-06）：這組範例中最低（1.647802）</li>
+          <li style="font-size:20px"><b>太大</b>：走過頭（overstep），loss 反而變高；1e-01 時暴增到 25392.214036</li>
+        </ul>
+        <p class="small" style="margin-top:8px">CS231n：learning rate 是訓練神經網路時<b>最重要、也最令人頭痛</b>的 hyperparameter 之一。</p>
+      </div>
+      <svg viewBox="0 0 560 390" style="flex:1">
+        <rect x="2" y="2" width="556" height="386" rx="22" fill="#fff" stroke="#7e854e" stroke-width="2.5"/>
+        <text x="24" y="38" font-size="18" font-weight="700" fill="#414522">走一步之後的 loss（縱軸是對數刻度）</text>
+        <g id="lrchart"></g>
+      </svg>
+    </div>
+  </div>
+  <div class="src">concepts / gradient-descent · concepts / hyperparameter-tuning</div>
+</section>
+
+<!-- wiki: concepts/gradient-descent.md, datasets/ilsvrc.md -->
+<section class="slide" data-title="Mini-batch">
+  <svg class="deco" style="left:-30px;bottom:-40px;width:200px;height:200px;fill:var(--lav)"><use href="#d-flower"/></svg>
+  <div class="tag">04 · 第四站 Optimization</div>
+  <div class="pad">
+    <h2>Mini-batch：<em>不必看完全部資料</em>才走一步</h2>
+    <p class="lead" style="font-size:23px">問題：大型資料集（例如 ILSVRC）的訓練影像有 120 萬張。只為了走一步，就算完全部資料的 loss，太浪費。</p>
+    <div class="row" style="margin-top:12px;align-items:flex-start;gap:28px">
+      <div class="col">
+        <div class="def"><span class="k">名詞</span><b>Mini-batch gradient descent</b>：每次只用一小<b>批（batch）</b>資料計算 gradient 就更新一次。（截至 CS231n 筆記撰寫時）典型的做法是從 120 萬張中取 <b>256 張</b>。</div>
+        <p style="font-size:20px;margin-top:12px"><b>為什麼可行？</b>因為訓練資料彼此相關。思想實驗：如果 120 萬張其實只是 1000 張不同影像（每類一張）、每張各複製 1200 份，那麼用全部算出的 gradient，和只用那 1000 張算的完全一樣。真實資料不會這樣重複，但一小批的 gradient 仍然是完整 gradient 的<b>好近似</b>，而且可以更頻繁地更新，收斂快得多。</p>
+        <ul class="star" style="margin-top:8px">
+          <li style="font-size:19px"><b>SGD</b>（Stochastic Gradient Descent）嚴格來說是 batch 只有<b>一筆</b>的情況；但大家說 SGD 時，<b>通常指的是 mini-batch</b>。</li>
+          <li style="font-size:19px">batch size 通常依記憶體決定，或直接設 32、64、128 這類 2 的次方（很多向量化運算，也就是一次處理一整批數字的寫法，在這種大小時跑得比較快）。</li>
+        </ul>
+      </div>
+      <svg viewBox="0 0 460 330" style="width:400px"><g id="batch"></g>
+        <text x="230" y="322" font-size="17" text-anchor="middle" fill="#6b6d5e">每次只抽一小批（深色）來估計方向</text></svg>
+    </div>
+  </div>
+  <div class="src">concepts / gradient-descent · datasets / ilsvrc</div>
+</section>
+
+<!-- wiki: concepts/backpropagation.md, concepts/gradient-descent.md -->
+<section class="slide trans" data-title="第四站下半：Backpropagation（轉場）">
+  <div class="band" style="background:var(--lav)">
+    <div class="st">STATION 04 · 下半</div><div class="no" style="font-size:150px;margin-top:30px">04<span style="font-size:60px">-2</span></div>
+    <h2>Back-<br>propagation</h2>
+    <p class="sub">有效率地算出 gradient</p>
+    <svg class="deco" style="left:60px;bottom:40px;width:240px;height:200px"><use href="#i-net"/></svg>
+  </div>
+  <div class="tbox">
+    <div class="card"><h3>上半留下的問題</h3><p>gradient descent 每走一步，都需要 loss 對<b>每一個</b>權重的 gradient。numerical gradient 太慢；analytic gradient 要自己推公式，又容易出錯。CS231n 認為：能夠計算 gradient 並直觀地理解它，是設計、訓練和理解神經網路<b>最重要的能力</b>。</p></div>
+    <div class="card"><h3>這一段的想法</h3><p><b>不寫出完整的 gradient 公式</b>。把運算拆成很多個小步驟，每一步只算自己的簡單導數，再<b>從輸出往回一路相乘</b>。</p></div>
+    <div class="card"><h3>這一段要回答</h3><ul class="check"><li>導數代表什麼意思？怎麼把每一段的導數串起來？</li><li>常見的運算，gradient 各有什麼規律？這和資料前處理有什麼關係？</li></ul></div>
+    <div><span class="pill">forward／backward pass</span><span class="pill">local gradient</span><span class="pill">chain rule</span><span class="pill">gate</span><span class="pill">data preprocessing</span></div>
+  </div>
+  <div class="route" data-cur="4"></div>
+  <div class="src" style="left:540px">concepts / backpropagation · concepts / gradient-descent</div>
+</section>
+
+<!-- wiki: concepts/backpropagation.md -->
+<section class="slide" data-title="Gradient＝敏感度">
+  <svg class="deco" style="right:-30px;bottom:-30px;width:190px;height:130px;fill:var(--sage)"><use href="#d-checker"/></svg>
+  <div class="tag">04 · 第四站 Optimization · Backprop</div>
+  <div class="pad">
+    <h2>先理解導數：<em>它代表「敏感度」</em></h2>
+    <p class="lead" style="font-size:23px">每個變數的導數，代表整個運算結果對這個變數有<b>多敏感</b>。</p>
+    <div class="row" style="margin-top:14px;align-items:flex-start;gap:30px">
+      <div class="col">
+        <div class="card soft"><h3>例子：f(x, y) = xy，x = 4、y = −3 → f = −12</h3>
+          <p class="small" style="margin-bottom:4px">∂f/∂x 讀作「f 對 x 的偏導數」：只讓 x 變動一點點時，f 變化多少。</p><p>∂f/∂x = y = <b>−3</b>：x 增加一點點 h，f 會<b>減少</b> 3h。<br>∂f/∂y = x = <b>4</b>：y 增加一點點 h，f 會<b>增加</b> 4h。</p>
+          <p class="small" style="margin-top:6px">注意：導數只描述「無限小」的變化，不能拿來預測大幅改變輸入時會發生什麼事。</p></div>
+        <div class="def" style="margin-top:14px"><span class="k">名詞</span><b>Local gradient（局部導數）</b>：一個小運算的輸出，對它<b>自己的輸入</b>的導數。只看這一個小運算，不管整個式子。</div>
+      </div>
+      <div style="width:460px">
+        <h3>三種基本運算的 local gradient</h3>
+        <table class="t" style="width:100%;margin-top:8px">
+          <tr><th>運算</th><th>對 x</th><th>對 y</th></tr>
+          <tr><td>f = xy（乘法）</td><td>y</td><td>x</td></tr>
+          <tr><td>f = x + y（加法）</td><td>1</td><td>1</td></tr>
+          <tr><td>f = max(x, y)</td><td>x 比較大時是 1，否則 0</td><td>y 比較大時是 1，否則 0</td></tr>
+        </table>
+        <p class="small" style="margin-top:8px">乘法：對一個輸入的導數，剛好是<b>另一個輸入的值</b>。這一點後面會用到。</p>
+      </div>
+    </div>
+  </div>
+  <div class="src">concepts / backpropagation</div>
+</section>
+
+<!-- wiki: concepts/backpropagation.md -->
+<section class="slide" data-title="Chain rule 逐步計算">
+  <svg class="deco" style="left:-50px;top:-50px;width:200px;height:200px;fill:var(--pink)"><use href="#d-asterisk"/></svg>
+  <div class="tag">04 · 第四站 Optimization · Backprop</div>
+  <div class="pad">
+    <h2>Chain rule：<em>把每一段的導數相乘</em></h2>
+    <p class="lead" style="font-size:22px">例子：f = (x + y) × z，x = −2、y = 5、z = −4。拆成兩個小運算（<b>gate</b>）：q = x + y、f = q × z。</p>
+    <div class="row" style="margin-top:8px;align-items:flex-start;gap:20px">
+      <svg viewBox="0 0 640 300" style="width:560px"><g id="circuit"></g></svg>
+      <div class="col">
+        <div class="def"><span class="k">名詞</span><b>Chain rule（連鎖律）</b>：把各段的 gradient <b>相乘</b>，就得到整體的 gradient：∂f/∂x = ∂f/∂q × ∂q/∂x。</div>
+        <p style="font-size:19px;margin-top:10px"><span style="color:var(--green);font-weight:800">綠色</span>：<b>forward pass</b>，數值從輸入流向輸出<br><span style="color:var(--red);font-weight:800">紅色</span>：<b>backward pass</b>，gradient 從輸出往回流</p>
+      </div>
+    </div>
+    <ol class="steps" style="margin-top:2px">
+      <li><b>Forward</b>：q = −2 + 5 = 3；f = 3 × (−4) = −12。</li>
+      <li><b>從輸出開始</b>：f 對自己的 gradient 是 1。</li>
+      <li><b>乘法 gate</b> f = q × z：對 z 的 local gradient 是 q = <b>3</b>；對 q 的是 z = <b>−4</b>。</li>
+      <li><b>加法 gate</b> q = x + y：local gradient 都是 1 → x、y 的 gradient 都是 −4 × 1 = <b>−4</b>。</li>
+    </ol>
+  </div>
+  <div class="src">concepts / backpropagation</div>
+</section>
+
+<!-- wiki: concepts/backpropagation.md -->
+<section class="slide" data-title="為什麼是局部的">
+  <svg class="deco" style="right:-40px;top:-40px;width:200px;height:200px;fill:var(--lav)"><use href="#d-star"/></svg>
+  <div class="tag">04 · 第四站 Optimization · Backprop</div>
+  <div class="pad">
+    <h2>Backprop 好用的原因：<em>每個 gate 只管自己</em></h2>
+    <div class="def" style="margin-top:14px"><span class="k">名詞</span><b>Backpropagation（反向傳播）</b>：反覆套用 chain rule，從輸出往回，有效率地算出整個運算對每個輸入的 gradient。</div>
+    <div class="grid2" style="margin-top:16px;gap:24px">
+      <div class="card soft"><h3>每個 gate 都是「局部」的</h3><p>gate 拿到輸入後，可以<b>立刻、獨立地</b>算出兩件事：自己的輸出值，以及自己的 local gradient。它<b>完全不需要知道整個電路長什麼樣子</b>。backward 時，它收到「上游傳來的 gradient」，乘上自己的 local gradient，再往回傳。</p></div>
+      <div class="card soft"><h3>gate 之間在「傳話」</h3><p>上一頁的加法 gate 收到 −4，意思是：整個電路<b>希望它的輸出變小</b>，力道是 4。它把 −4 乘上 1 傳給 x、y。如果 x、y 照著負的 gradient 變小，q 就變小；因為 z 是負的，f 就會<b>變大</b>。</p></div>
+    </div>
+    <div class="card" style="margin-top:16px;background:var(--sage)"><h3>實作時的兩個注意事項</h3>
+      <ul class="check"><li style="font-size:20px"><b>存下 forward 的中間值</b>（cache）：backward 時會用到。</li><li style="font-size:20px"><b>分岔處的 gradient 要相加</b>：同一個變數在式子裡被用到好幾次時，往回流的 gradient 要累加，不能覆蓋。</li></ul></div>
+    <p class="small" style="margin-top:12px">CS231n 強調：幾乎<b>永遠不需要</b>在紙上把整個式子完整地微分；只要拆成小段，每段各自算 local gradient 就好。</p>
+  </div>
+  <div class="src">concepts / backpropagation</div>
+</section>
+
+<!-- wiki: concepts/backpropagation.md -->
+<section class="slide" data-title="三種 gate 的模式">
+  <svg class="deco" style="left:-50px;top:-50px;width:200px;height:200px;fill:var(--pink)"><use href="#d-asterisk"/></svg>
+  <div class="tag">04 · 第四站 Optimization · Backprop</div>
+  <div class="pad">
+    <h2>三種常見 gate 的<em>規律</em></h2>
+    <p class="lead" style="font-size:22px">CS231n 用一個電路示範：下面每張圖的綠字是 forward 的值，紅字是 backward 的 gradient，輸出端收到的 gradient 都是 2.00。</p>
+    <div class="grid3" style="margin-top:16px">
+      <div class="card"><h3>add：原封不動分給大家</h3><svg viewBox="0 0 260 120" style="width:100%"><g id="g-add"></g></svg><p style="font-size:19px">local gradient 是 +1，所以把輸出的 gradient <b>原封不動</b>分給所有輸入：兩個輸入都拿到 2.00。</p></div>
+      <div class="card"><h3>max：只給最大的</h3><svg viewBox="0 0 260 120" style="width:100%"><g id="g-max"></g></svg><p style="font-size:19px">只傳給 forward 時<b>值最大</b>的輸入：z = 2 比 w = −1 大，所以 z 拿到 2.00，w 拿到 0。</p></div>
+      <div class="card"><h3>mul：交換</h3><svg viewBox="0 0 260 120" style="width:100%"><g id="g-mul"></g></svg><p style="font-size:19px">local gradient 是<b>另一個輸入的值</b>：x 的 gradient = y 的值 −4.00 × 2.00 = −8.00。</p></div>
+    </div>
+    <div class="keybox" style="margin-top:16px;font-size:20px">mul 的反直覺效果：一個輸入很小、另一個很大時，<b>小的輸入會拿到很大的 gradient</b>，大的輸入反而拿到很小的 gradient。下一頁說明這為什麼重要。</div>
+  </div>
+  <div class="src">concepts / backpropagation</div>
+</section>
+
+<!-- wiki: concepts/data-preprocessing.md, concepts/backpropagation.md, concepts/linear-classifier.md -->
+<section class="slide" data-title="資料前處理">
+  <svg class="deco" style="right:-50px;bottom:-50px;width:220px;height:220px;color:var(--yellow)"><use href="#d-ring"/></svg>
+  <div class="tag">04 · 第四站 Optimization · Backprop</div>
+  <div class="pad">
+    <h2>mul gate 帶來的提醒：<em>資料前處理</em></h2>
+    <div class="grid2" style="margin-top:16px;gap:24px">
+      <div class="card soft"><h3>為什麼尺度會影響訓練</h3><p>權重和輸入相乘（w × x）。依 mul gate 的規律，<b>權重的 gradient 跟著輸入 x 的大小變化</b>：輸入都乘以 1000，權重的 gradient 也變成 1000 倍，learning rate 就得調小同樣的倍數。</p></div>
+      <div class="def" style="align-self:start"><span class="k">名詞</span><b>Data preprocessing（資料前處理）</b>：把資料送進模型之前，先調整它的<b>中心位置</b>和<b>尺度</b>。</div>
+    </div>
+    <svg viewBox="0 0 1160 172" style="width:100%;margin-top:8px"><g id="prep"></g></svg>
+    <div class="grid2" style="margin-top:2px;gap:24px">
+      <div class="card soft" style="padding:14px 22px"><h3>① Centering（減去平均）</h3><p>先算出所有訓練影像的<b>平均影像（mean image）</b>，再從每張影像減掉它 → 像素範圍大約變成 −127～127。CS231n 說這一步比較重要。</p></div>
+      <div class="card soft" style="padding:14px 22px"><h3>② Scaling（縮放）</h3><p>再把每個輸入特徵縮放到 <b>−1～1</b> 的範圍。</p></div>
+    </div>
+  </div>
+  <div class="src">concepts / data-preprocessing · concepts / backpropagation · concepts / linear-classifier</div>
+</section>
+
+<!-- wiki: concepts/gradient-descent.md, concepts/backpropagation.md, concepts/hyperparameter-tuning.md -->
+<section class="slide" data-title="第四站小結：學習的迴圈">
+  <svg class="deco" style="left:-40px;bottom:-40px;width:200px;height:200px;fill:var(--lav)"><use href="#d-flower"/></svg>
+  <div class="tag">04 · 第四站 Optimization · 小結</div>
+  <div class="pad">
+    <h2>第四站小結：<em>學習的迴圈</em>完整了</h2>
+    <div class="row" style="margin-top:10px;align-items:flex-start;gap:24px">
+      <svg viewBox="0 0 700 470" style="width:680px"><g id="loop"></g></svg>
+      <div class="col">
+        <ul class="check" style="margin-top:6px">
+          <li style="font-size:20px"><b>Backprop 負責「算出」gradient</b>，gradient descent 負責「用」gradient 更新參數。<span class="note">（Wiki 標為綜合推論）</span></li>
+          <li style="font-size:20px">k、λ、learning rate 這些 hyperparameter 用 <b>validation set</b> 選；<b>test set</b> 只在最後用一次。</li>
+          <li style="font-size:20px">batch size 例外：通常依記憶體決定，不用 cross-validation 選。</li>
+        </ul>
+        <div class="keybox" style="margin-top:14px;font-size:20px">CS231n：有了 backprop，就能有效率地算出 gradient，也就準備好訓練神經網路了。</div>
+      </div>
+    </div>
+  </div>
+  <div class="src">concepts / gradient-descent · concepts / backpropagation · concepts / hyperparameter-tuning</div>
+</section>
+
+<!-- ============================ 終點 ============================ -->
+<!-- wiki: overview.md, tasks/image-classification.md -->
+<section class="slide" data-title="回顧">
+  <svg class="deco" style="right:-60px;top:-60px;width:250px;height:250px;fill:var(--sage)"><use href="#d-flower"/></svg>
+  <div class="tag">終點 · 回顧</div>
+  <div class="pad">
+    <h2>回顧：每一站<em>解決了什麼</em></h2>
+    <table class="t sm" style="width:100%;margin-top:18px">
+      <tr><th>站</th><th>要解決的問題</th><th>這一站的答案</th><th>留下的問題</th></tr>
+      <tr><td><b>0 影像分類</b></td><td>電腦只看到數字，規則寫不出來</td><td>data-driven：從有標籤的例子學</td><td>最直接的學法是什麼？</td></tr>
+      <tr><td><b>1 KNN</b></td><td>怎麼從例子分類</td><td>找最像的 k 張投票（L1／L2 距離）</td><td>慢、要存全部資料、像素距離沒有語意</td></tr>
+      <tr><td><b>2 Linear classifier</b></td><td>不想存全部資料、逐張比對</td><td>學出參數 W、b：f = Wx + b</td><td>W 怎麼來？怎麼知道好不好？</td></tr>
+      <tr><td><b>3 Loss</b></td><td>怎麼衡量 W 的好壞</td><td>SVM／Softmax loss + λR(W)</td><td>怎麼找到 loss 最小的 W？</td></tr>
+      <tr><td><b>4 Optimization</b></td><td>怎麼找到好的 W</td><td>gradient descent；用 backprop 算 gradient</td><td>一類只有一個模板，表達能力不足</td></tr>
+    </table>
+    <div class="keybox" style="margin-top:20px;font-size:22px">到這裡，<b>score function + loss function + optimization</b> 三個元件都到齊了。這就是之後神經網路和 CNN 都沿用的學習框架。</div>
+  </div>
+  <div class="src">overview · tasks / image-classification</div>
+</section>
+
+<!-- wiki: overview.md, concepts/optimization.md, concepts/backpropagation.md, concepts/linear-classifier.md, concepts/k-nearest-neighbor.md -->
+<section class="slide" data-title="下集預告">
+  <svg class="deco" style="left:-30px;bottom:-30px;width:180px;height:270px;fill:var(--sky)"><use href="#d-halves"/></svg>
+  <svg class="deco" style="right:120px;top:60px;width:240px;height:200px"><use href="#i-layers"/></svg>
+  <div class="tag">終點 · 下集預告</div>
+  <div class="pad">
+    <h2>下集：<em>換掉 score function</em></h2>
+    <p class="lead" style="font-size:23px;width:700px">還有兩個問題沒有解決：</p>
+    <div class="grid2" style="margin-top:12px;gap:24px;width:780px">
+      <div class="card soft"><p>第一站：KNN 告訴我們<b>必須超越 raw pixel</b>。</p></div>
+      <div class="card soft"><p>第二站：linear classifier 每類只有一個模板，<b>表達能力不足</b>（兩個頭的馬）。</p></div>
+    </div>
+    <svg viewBox="0 0 1160 170" style="width:100%;margin-top:22px"><g id="frame"></g></svg>
+    <div class="keybox" style="margin-top:10px;font-size:21px">CS231n 的預告：之後把 score function 換成<b>神經網路</b>、<b>CNN</b>，loss 和最佳化的過程<b>大致不變</b>。「觀念上最難的部分已經過去了，ConvNets 只差一小步。」</div>
+  </div>
+  <div class="src">overview · concepts / optimization · concepts / backpropagation</div>
+</section>
+
+<!-- wiki: tasks/image-classification.md, datasets/cifar-10.md, concepts/k-nearest-neighbor.md, concepts/hyperparameter-tuning.md, concepts/overfitting.md, concepts/linear-classifier.md -->
+<section class="slide" data-title="名詞索引（一）">
+  <div class="tag">附錄 · 名詞索引（一）</div>
+  <div class="pad" style="top:80px">
+    <h2 style="font-size:44px">名詞索引（一）：<em>序章、KNN、Linear classifier</em></h2>
+    <div class="gloss" style="margin-top:16px">
+      <div><b>影像分類</b>：從固定的類別中，替一張圖選出一個標籤</div>
+      <div><b>像素（pixel）</b>：影像上的一點；彩色影像每點有紅、綠、藍 3 個 0～255 的數字</div>
+      <div><b>標籤（label）／ground truth</b>：每張影像正確的類別</div>
+      <div><b>Data-driven approach</b>：不寫規則，給電腦看有標籤的例子，讓它自己學</div>
+      <div><b>Training set／Test set</b>：用來學的資料／最後評估用、只用一次的資料</div>
+      <div><b>Accuracy</b>：預測正確的比例</div>
+      <div><b>L1 距離</b>：逐像素相減取絕對值，全部加總</div>
+      <div><b>L2 距離</b>：逐像素相減平方，加總後開根號（直線距離）</div>
+      <div><b>KNN</b>：找最近的 k 張訓練圖投票；k = 1 是 Nearest Neighbor</div>
+      <div><b>決策邊界</b>：把空間分給各類別的分界線</div>
+      <div><b>Hyperparameter</b>：無法從資料學到、要由人來選的設定（k、λ、learning rate…）</div>
+      <div><b>Validation set</b>：從 training set 切出、用來選 hyperparameter 的「模擬考」</div>
+      <div><b>Cross-validation</b>：輪流讓每一份資料當 validation，再取平均</div>
+      <div><b>Overfitting</b>：擬合到雜訊，在那份資料上好、在新資料上變差</div>
+      <div><b>Generalization（泛化）</b>：在沒看過的資料上的表現</div>
+      <div><b>參數（parameter）</b>：模型裡可以調整、從資料學出來的數字（W、b）</div>
+      <div><b>Score function</b>：把像素轉成每個類別一個分數的函數，例如 f = Wx + b</div>
+      <div><b>內積</b>：兩串數字對應位置相乘再加總</div>
+      <div><b>模板（template）</b>：W 的一列排回影像形狀，可看成該類別學出來的「圖」</div>
+      <div><b>模式（mode）</b>：同一類別裡幾種明顯不同的樣子</div>
+    </div>
+  </div>
+  <div class="src">各概念頁</div>
+</section>
+
+<!-- wiki: concepts/loss-function.md, concepts/softmax-cross-entropy.md, concepts/regularization.md, concepts/optimization.md, concepts/gradient-descent.md, concepts/backpropagation.md, concepts/data-preprocessing.md -->
+<section class="slide" data-title="名詞索引（二）">
+  <div class="tag">附錄 · 名詞索引（二）</div>
+  <div class="pad" style="top:80px">
+    <h2 style="font-size:44px">名詞索引（二）：<em>Loss、Optimization</em></h2>
+    <div class="gloss" style="margin-top:16px">
+      <div><b>Loss function</b>：把「預測有多差」變成一個數字；越低越好</div>
+      <div><b>Data loss</b>：所有訓練圖 loss 的平均</div>
+      <div><b>Margin（Δ）</b>：SVM 要求正確類別領先的最小差距；通常設 1.0</div>
+      <div><b>Hinge loss</b>：max(0, ·) 這種在 0 截斷的函數；SVM loss 用它</div>
+      <div><b>Softmax</b>：取指數再除以總和，把分數變成 0～1、加總為 1 的「機率」</div>
+      <div><b>Cross-entropy loss</b>：正確類別「機率」p 的 −log p</div>
+      <div><b>正規化（normalize）</b>：在 softmax 中指「除以總和，讓加總為 1」</div>
+      <div><b>Regularization（正規化）</b>：loss 中只看權重的懲罰，表達對 W 的偏好</div>
+      <div><b>L2 regularization</b>：所有權重平方後加總，偏好小而分散的權重</div>
+      <div><b>λ</b>：regularization strength，懲罰項的權重</div>
+      <div><b>Optimization</b>：找出讓 loss 最小的參數</div>
+      <div><b>Convex</b>：碗狀的函數；SVM loss 是，神經網路的 loss 不是</div>
+      <div><b>Gradient</b>：每個參數各一個斜率排成的向量；指向上升最陡的方向</div>
+      <div><b>Gradient descent</b>：反覆算 gradient、往反方向走一小步</div>
+      <div><b>Learning rate（step size）</b>：每一步走多遠</div>
+      <div><b>Mini-batch／SGD</b>：每次只用一小批資料算 gradient 就更新</div>
+      <div><b>Gradient check</b>：用 numerical gradient 檢查 analytic gradient 有沒有寫錯</div>
+      <div><b>Local gradient</b>：一個小運算的輸出對自己輸入的導數</div>
+      <div><b>Chain rule</b>：把各段的導數相乘，得到整體的導數</div>
+      <div><b>Backpropagation</b>：用 chain rule 從輸出往回，算出每個輸入的 gradient</div>
+      <div><b>Data preprocessing</b>：送進模型前，調整資料的中心和尺度</div>
+    </div>
+  </div>
+  <div class="src">各概念頁</div>
+</section>
+
+<!-- wiki: sources/cs231n.md, index.md -->
+<section class="slide" data-title="參考來源">
+  <svg class="deco" style="right:120px;top:90px;width:260px;height:210px"><use href="#i-book"/></svg>
+  <svg class="deco" style="left:-40px;bottom:-40px;width:200px;height:200px;fill:var(--peach)"><use href="#d-flower"/></svg>
+  <div class="tag">參考來源</div>
+  <div class="pad">
+    <h2>參考<em>來源</em></h2>
+    <p class="lead" style="font-size:23px">本簡報只取材自 CV Wiki；Wiki 的內容整理自以下課程筆記：</p>
+    <div class="card" style="margin-top:18px;width:760px">
+      <h3>Stanford CS231n 課程筆記（4 篇）</h3>
+      <ul class="check" style="margin-top:6px">
+        <li style="font-size:20px">classification：影像分類、Nearest Neighbor、KNN、validation</li>
+        <li style="font-size:20px">linear-classify：linear classifier、SVM、Softmax、regularization</li>
+        <li style="font-size:20px">optimization-1：loss 地形、gradient descent、learning rate、mini-batch</li>
+        <li style="font-size:20px">optimization-2：backpropagation、chain rule、gate 的模式</li>
+      </ul>
+    </div>
+    <p class="small" style="margin-top:18px">Wiki 頁面：tasks/image-classification · datasets/cifar-10 · datasets/ilsvrc · concepts/k-nearest-neighbor · hyperparameter-tuning · overfitting · linear-classifier · loss-function · softmax-cross-entropy · regularization · optimization · gradient-descent · backpropagation · data-preprocessing · overview</p>
+    <p class="small" style="margin-top:8px">簡報中的插圖與示意圖都是重新繪製的，沒有使用原始來源的圖片。</p>
+  </div>
+  <div class="src">sources / cs231n · index</div>
+</section>
+
+</div><!-- /#stage -->
+
+<div id="bar"></div>
+<div id="num"></div>
+<div id="hint">← → 翻頁 · O 總覽</div>
+<div id="overview"></div>
+
+<script>
+(function(){
+"use strict";
+var NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs, parent, text){
+  var e = document.createElementNS(NS, tag);
+  for (var k in attrs) e.setAttribute(k, attrs[k]);
+  if (text !== undefined) e.textContent = text;
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function $(id){ return document.getElementById(id); }
+var O = "#7e854e", DK = "#414522", INK = "#2b2c26", MUT = "#6b6d5e", GR = "#5f8a3a", RD = "#c0573f";
+function arrow(g,x1,y1,x2,y2,w){ el("path",{d:"M"+x1+" "+y1+" L"+x2+" "+y2,stroke:O,"stroke-width":w||3.5,fill:"none","marker-end":"url(#ah)"},g); }
+function box(g,x,y,w,h,fill,t1,t2,fs){
+  el("rect",{x:x,y:y,width:w,height:h,rx:14,fill:fill,stroke:O,"stroke-width":2.5},g);
+  var cy = y + h/2;
+  el("text",{x:x+w/2,y:t2?cy-6:cy+7,"font-size":fs||19,"text-anchor":"middle",fill:DK,"font-weight":800},g,t1);
+  if (t2) el("text",{x:x+w/2,y:cy+20,"font-size":(fs||19)-3,"text-anchor":"middle",fill:INK},g,t2);
+}
+
+/* ---------- 轉場頁的小路線圖 ---------- */
+Array.prototype.forEach.call(document.querySelectorAll(".route"), function(d){
+  var cur = parseInt(d.getAttribute("data-cur"),10);
+  var names = ["影像分類","KNN","Linear","Loss","Optimization","下集"];
+  var svg = el("svg",{viewBox:"0 0 830 64",width:"100%",height:"64"});
+  d.appendChild(svg);
+  el("line",{x1:30,y1:20,x2:780,y2:20,stroke:O,"stroke-width":3,"stroke-dasharray":"2 9","stroke-linecap":"round"},svg);
+  names.forEach(function(n,i){
+    var x = 30 + i*150, ghost = i===5, now = i===cur, past = i<cur;
+    el("circle",{cx:x,cy:20,r:now?17:13,fill:now?DK:(past?"#b8bd8f":"#fff"),stroke:ghost?"#9a9c88":DK,"stroke-width":now?3:2.5,"stroke-dasharray":ghost?"4 4":"none"},svg);
+    if (!ghost) el("text",{x:x,y:26,"font-size":now?17:14,"text-anchor":"middle",fill:now?"#fff":DK,"font-weight":800},svg,String(i));
+    el("text",{x:x,y:56,"font-size":15,"text-anchor":"middle",fill:ghost?"#9a9c88":(now?DK:MUT),"font-weight":now?800:400},svg,n);
+  });
+});
+
+/* ---------- 像素格（示意） ---------- */
+(function(){
+  var g = $("pix"); if (!g) return;
+  var vals = [[52,61,74,88,90,84],[60,140,152,148,96,80],[71,160,201,190,112,77],[66,150,188,176,104,70],[58,92,120,110,80,63],[50,57,69,72,64,55]];
+  for (var r=0;r<6;r++) for (var c=0;c<6;c++){
+    var v = vals[r][c];
+    el("rect",{x:c*32,y:r*32,width:32,height:32,fill:"rgb("+v+","+(v-6)+","+(v-18)+")",stroke:"#fffaf5","stroke-width":1.5},g);
+    el("text",{x:c*32+16,y:r*32+21,"font-size":11,"text-anchor":"middle",fill:v>120?"#2b2c26":"#fffaf5"},g,String(v));
+  }
+  el("rect",{x:0,y:0,width:192,height:192,fill:"none",stroke:O,"stroke-width":3,rx:4},g);
+})();
+
+/* ---------- Nearest Neighbor 示意 ---------- */
+(function(){
+  var g = $("nn-demo"); if (!g) return;
+  el("rect",{x:10,y:120,width:110,height:110,rx:14,fill:"#fff",stroke:DK,"stroke-width":3},g);
+  el("text",{x:65,y:192,"font-size":52,"text-anchor":"middle",fill:DK,"font-weight":800},g,"?");
+  el("text",{x:65,y:256,"font-size":17,"text-anchor":"middle",fill:DK,"font-weight":700},g,"新影像");
+  var items = [["cat","#f6d5c9","312"],["dog","#e6f1d5","845"],["ship","#d0ecf1","1290"],["cat","#f6d5c9","507"],["frog","#fdefc4","960"]];
+  items.forEach(function(it,i){
+    var y = 12 + i*62, best = i===0;
+    el("line",{x1:120,y1:175,x2:218,y2:y+26,stroke:best?DK:"#c9c6b8","stroke-width":best?3:1.6,"stroke-dasharray":best?"none":"4 5"},g);
+    el("rect",{x:220,y:y,width:52,height:52,rx:8,fill:it[1],stroke:best?DK:O,"stroke-width":best?4:2},g);
+    el("text",{x:290,y:y+33,"font-size":17,fill:best?DK:MUT,"font-weight":best?800:400},g,"距離 "+it[2]);
+    el("text",{x:392,y:y+33,"font-size":17,fill:INK,"font-weight":best?800:400},g,it[0]);
+  });
+  el("text",{x:10,y:336,"font-size":16,fill:DK,"font-weight":700},g,"距離最小的是 312 → 答案：cat");
+  el("text",{x:10,y:356,"font-size":13,fill:RD,"font-weight":700},g,"圖中的距離數值為示意");
+})();
+
+/* ---------- KNN 點雲（k = 5） ---------- */
+(function(){
+  var g = $("knn-pts"), L = $("knn-lines"); if (!g) return;
+  var A = [[70,80],[110,60],[95,130],[150,95],[55,165],[135,160],[180,150],[175,215],[205,140]];
+  var B = [[300,80],[340,120],[370,70],[380,160],[355,230],[285,175],[395,110]];
+  var C = [[90,300],[140,330],[200,320],[240,335],[290,310],[330,330],[240,265],[60,250]];
+  var col = {A:"#9fc37a",B:"#f0a48f",C:"#8fc3d6"};
+  [["A",A],["B",B],["C",C]].forEach(function(p){ p[1].forEach(function(q){ el("circle",{cx:q[0],cy:q[1],r:9,fill:col[p[0]],stroke:"#fff","stroke-width":2},g); }); });
+  [[180,150],[175,215],[205,140],[285,175],[240,265]].forEach(function(q){ el("line",{x1:222,y1:200,x2:q[0],y2:q[1],"stroke-dasharray":"3 5"},L); });
+})();
+
+/* ---------- 四張臉 ---------- */
+(function(){
+  var g = $("faces"); if (!g) return;
+  var labels = ["原圖","平移（shifted）","遮住（messed up）","調暗（darkened）"];
+  for (var i=0;i<4;i++){
+    var x = 40 + i*290, gg = el("g",{transform:"translate("+x+" 10)"},g);
+    var bg = i===3 ? "#c9c6b8" : "#efece2";
+    el("rect",{x:0,y:0,width:200,height:180,rx:16,fill:bg,stroke:O,"stroke-width":2.5},gg);
+    var dx = i===1 ? 18 : 0, face = i===3 ? "#cbb7a4" : "#ecd8c4", feat = i===3 ? "#6e6252" : "#5b4e3f";
+    el("ellipse",{cx:100+dx,cy:92,rx:52,ry:64,fill:face,stroke:feat,"stroke-width":2},gg);
+    el("circle",{cx:80+dx,cy:80,r:6,fill:feat},gg); el("circle",{cx:120+dx,cy:80,r:6,fill:feat},gg);
+    el("path",{d:"M"+(82+dx)+" 120 q18 12 36 0",fill:"none",stroke:feat,"stroke-width":3,"stroke-linecap":"round"},gg);
+    if (i===2){ el("rect",{x:64,y:66,width:30,height:24,fill:"#111"},gg); el("rect",{x:106,y:66,width:30,height:24,fill:"#111"},gg); el("rect",{x:76,y:110,width:48,height:22,fill:"#111"},gg); }
+    el("text",{x:100,y:212,"font-size":19,"text-anchor":"middle",fill:INK},gg,labels[i]);
+    if (i>0) el("text",{x:100,y:238,"font-size":16,"text-anchor":"middle",fill:O,"font-weight":700},gg,"和原圖的 L2 距離相同");
+  }
+})();
+
+/* ---------- 5-fold cross-validation ---------- */
+(function(){
+  var g = $("folds"); if (!g) return;
+  el("text",{x:210,y:20,"font-size":17,"text-anchor":"middle",fill:DK,"font-weight":800},g,"5-fold：訓練資料分成 5 份，輪流驗證");
+  for (var r=0;r<5;r++){
+    el("text",{x:46,y:58+r*36,"font-size":15,"text-anchor":"end",fill:MUT},g,"第 "+(r+1)+" 輪");
+    for (var c=0;c<5;c++){
+      var v = c===r;
+      el("rect",{x:56+c*68,y:38+r*36,width:64,height:28,rx:6,fill:v?"#fdefc4":"#e6f1d5",stroke:O,"stroke-width":v?2.5:1.2},g);
+      if (v) el("text",{x:88+c*68,y:58+r*36,"font-size":13,"text-anchor":"middle",fill:DK,"font-weight":700},g,"驗證");
+    }
+  }
+  el("text",{x:210,y:240,"font-size":15,"text-anchor":"middle",fill:MUT},g,"綠：拿來訓練　黃：拿來驗證　→ 5 次的結果取平均");
+})();
+
+/* ---------- W × x + b = scores ---------- */
+(function(){
+  var W = [[0.2,-0.5,0.1,2.0],[1.5,1.3,2.1,0.0],[0,0.25,0.2,-0.3]], x=[56,231,24,2], b=[1.1,3.2,-1.2], s=["−96.8","437.9","61.95"];
+  var rowc = ["#f6d5c9","#e6f1d5","#d0ecf1"], name=["cat","dog","ship"];
+  var g = $("wmat"); if (!g) return;
+  var fmt = function(v){ return (v<0?"−":"")+Math.abs(v); };
+  for (var r=0;r<3;r++) for (var c=0;c<4;c++){
+    el("rect",{x:40+c*96,y:60+r*66,width:96,height:66,fill:rowc[r],stroke:"#fff","stroke-width":2},g);
+    el("text",{x:88+c*96,y:101+r*66},g,fmt(W[r][c]));
+  }
+  el("text",{x:232,y:290,"font-size":24,"font-style":"italic",fill:DK},g,"W（每一列＝一個類別）");
+  for (r=0;r<3;r++) el("text",{x:30,y:101+r*66,"font-size":16,"text-anchor":"end",fill:MUT},g,name[r]);
+  var xv = $("xvec");
+  for (var i=0;i<4;i++){ el("rect",{x:495,y:30+i*58,width:76,height:58,fill:"#fff",stroke:O,"stroke-width":2},xv); el("text",{x:533,y:67+i*58},xv,String(x[i])); }
+  el("text",{x:533,y:290,"font-size":24,"font-style":"italic",fill:DK},xv,"x（像素）");
+  var bv = $("bvec");
+  for (r=0;r<3;r++){ el("rect",{x:640,y:60+r*66,width:76,height:66,fill:rowc[r],stroke:"#fff","stroke-width":2},bv); el("text",{x:678,y:101+r*66},bv,fmt(b[r])); }
+  el("text",{x:678,y:290,"font-size":24,"font-style":"italic",fill:DK},bv,"b");
+  var sv = $("svec");
+  for (r=0;r<3;r++){
+    el("rect",{x:790,y:60+r*66,width:120,height:66,fill:rowc[r],stroke:r===1?DK:"#fff","stroke-width":r===1?4:2},sv);
+    el("text",{x:850,y:101+r*66,"font-weight":r===1?800:400},sv,s[r]);
+    el("text",{x:930,y:101+r*66,"text-anchor":"start","font-size":19,fill:r===0?RD:MUT},sv,name[r]+" 分數"+(r===0?"（最低！）":(r===1?"（最高）":"")));
+  }
+})();
+
+/* ---------- SVM 數線 ---------- */
+(function(){
+  var g = $("svmline"); if (!g) return;
+  var X = function(v){ return 140 + (v+10)*36; };
+  el("rect",{x:X(3),y:64,width:X(13)-X(3),height:52,fill:"#f6d5c9",opacity:.85},g);
+  el("text",{x:(X(3)+X(13))/2,y:140,"font-size":17,"text-anchor":"middle",fill:RD},g,"紅色區域：從 13 往左 10（到 3）；錯誤類別落在這裡或更右邊就會扣分");
+  [[-7,"錯誤類別 −7",MUT,44],[11,"錯誤類別 11",RD,22],[13,"正確類別 13",DK,44]].forEach(function(p){
+    el("line",{x1:X(p[0]),y1:60,x2:X(p[0]),y2:120,stroke:p[2],"stroke-width":5,"stroke-linecap":"round"},g);
+    el("text",{x:X(p[0]),y:p[3],"font-size":18,"text-anchor":p[0]===13?"start":"middle",fill:p[2],"font-weight":700},g,p[1]);
+  });
+  el("text",{x:1120,y:118,"font-size":16,"text-anchor":"end",fill:MUT},g,"分數");
+})();
+
+/* ---------- softmax 三段 ---------- */
+(function(){
+  var g = $("softmax"); if (!g) return;
+  var cols = [["分數",["−2.85","0.86","0.28"]],["① 取指數 exp",["0.058","2.36","1.32"]],["② 正規化（normalize）",["0.016","0.631","0.353"]]];
+  var bars = [[0,0,0],[0.058,2.36,1.32],[0.016,0.631,0.353]], maxb=[1,2.36,0.631];
+  var c3 = ["#f6d5c9","#e6f1d5","#d0ecf1"];
+  cols.forEach(function(cl,i){
+    var x0 = 20 + i*330;
+    el("text",{x:x0+110,y:30,"font-size":20,"text-anchor":"middle",fill:DK,"font-weight":700},g,cl[0]);
+    for (var r=0;r<3;r++){
+      el("rect",{x:x0,y:50+r*62,width:220,height:52,rx:10,fill:"#fff",stroke:O,"stroke-width":2},g);
+      if (i>0) el("rect",{x:x0+4,y:54+r*62,width:Math.max(4,212*bars[i][r]/maxb[i]),height:44,rx:8,fill:c3[r]},g);
+      el("text",{x:x0+110,y:84+r*62,"font-size":22,"text-anchor":"middle",fill:INK,"font-weight":r===2?800:400},g,cl[1][r]);
+    }
+    if (i<2) el("path",{d:"M"+(x0+232)+" 140 h80",stroke:O,"stroke-width":4,"marker-end":"url(#ah)"},g);
+  });
+  el("text",{x:1040,y:104,"font-size":19,"text-anchor":"middle",fill:MUT},g,"三個數加總為 1");
+  el("text",{x:1040,y:140,"font-size":19,"text-anchor":"middle",fill:MUT},g,"第三類（正確類別）");
+  el("text",{x:1040,y:172,"font-size":19,"text-anchor":"middle",fill:MUT},g,"的「機率」是 0.353");
+})();
+
+/* ---------- −log p 曲線 ---------- */
+(function(){
+  var g = $("nlog"); if (!g) return;
+  var X = function(p){ return 70 + p*350; }, Y = function(l){ return 290 - l*55; };
+  el("text",{x:230,y:36,"font-size":19,"text-anchor":"middle",fill:DK,"font-weight":800},g,"loss = −log p");
+  el("line",{x1:70,y1:290,x2:430,y2:290,stroke:INK,"stroke-width":2},g);
+  el("line",{x1:70,y1:290,x2:70,y2:55,stroke:INK,"stroke-width":2},g);
+  [0,1,2,3,4].forEach(function(l){ el("text",{x:62,y:Y(l)+5,"font-size":13,"text-anchor":"end",fill:MUT},g,String(l)); if(l) el("line",{x1:70,y1:Y(l),x2:430,y2:Y(l),stroke:"#eee"},g); });
+  [0,0.5,1].forEach(function(p){ el("text",{x:X(p),y:310,"font-size":13,"text-anchor":"middle",fill:MUT},g,String(p)); });
+  var d = ""; for (var p=0.0145; p<=1.0001; p+=0.005){ d += (d?"L":"M") + X(p).toFixed(1) + " " + Y(-Math.log(p)).toFixed(1) + " "; }
+  el("path",{d:d,fill:"none",stroke:DK,"stroke-width":4},g);
+  el("circle",{cx:X(1),cy:Y(0),r:7,fill:GR,stroke:"#fff","stroke-width":2},g);
+  el("text",{x:X(1)-6,y:Y(0)-14,"font-size":15,"text-anchor":"end",fill:GR,"font-weight":700},g,"p = 1 → loss 0");
+  el("circle",{cx:X(0.353),cy:Y(1.04),r:7,fill:RD,stroke:"#fff","stroke-width":2},g);
+  el("text",{x:X(0.353)+12,y:Y(1.04)-10,"font-size":15,fill:RD,"font-weight":700},g,"p = 0.353 → loss 1.04");
+  el("text",{x:96,y:80,"font-size":14,fill:MUT},g,"p 越接近 0，loss 越大");
+  el("text",{x:250,y:336,"font-size":14,"text-anchor":"middle",fill:MUT},g,"正確類別的「機率」p");
+})();
+
+/* ---------- W 與 2W ---------- */
+(function(){
+  var g = $("w2demo"); if (!g) return;
+  function line(y, lab, gap){
+    el("text",{x:0,y:y+6,"font-size":20,fill:DK,"font-weight":800},g,lab);
+    el("line",{x1:200,y1:y,x2:1100,y2:y,stroke:INK,"stroke-width":2},g);
+    var a = 280, b = 280 + gap*18;
+    el("line",{x1:a,y1:y-22,x2:a,y2:y+22,stroke:MUT,"stroke-width":5,"stroke-linecap":"round"},g);
+    el("line",{x1:b,y1:y-22,x2:b,y2:y+22,stroke:DK,"stroke-width":5,"stroke-linecap":"round"},g);
+    el("text",{x:a,y:y-30,"font-size":15,"text-anchor":"middle",fill:MUT},g,"最接近的錯誤類別");
+    el("text",{x:b,y:y-30,"font-size":15,"text-anchor":"middle",fill:DK},g,"正確類別");
+    el("path",{d:"M"+a+" "+(y+32)+" H"+b,stroke:O,"stroke-width":2.5,"marker-end":"url(#ah)"},g);
+    el("text",{x:(a+b)/2,y:y+54,"font-size":17,"text-anchor":"middle",fill:O,"font-weight":800},g,"差 "+gap);
+  }
+  line(50,"原本的 W",15);
+  line(150,"W × 2",30);
+  el("text",{x:1100,y:100,"font-size":19,"text-anchor":"end",fill:GR,"font-weight":800},g,"兩者的 loss 都是 0");
+})();
+
+/* ---------- 第三站小結：loss 流程 ---------- */
+(function(){
+  var g = $("lossflow"); if (!g) return;
+  box(g,0,40,140,80,"#fff","影像 x","");
+  arrow(g,140,80,192,80);
+  box(g,198,40,250,80,"#d0ecf1","Score function","f = Wx + b（第二站）");
+  arrow(g,448,80,500,80);
+  box(g,506,40,120,80,"#fff","分數 s","");
+  arrow(g,626,80,676,80);
+  box(g,682,40,290,80,"#fdefc4","Data loss","SVM 或 Softmax，取平均");
+  el("text",{x:827,y:24,"font-size":16,"text-anchor":"middle",fill:MUT},g,"↓ 正確標籤 y");
+  box(g,198,210,250,80,"#e6f1d5","權重 W","同一組 W");
+  el("path",{d:"M323 210 V120",stroke:O,"stroke-width":2.5,"stroke-dasharray":"6 6",fill:"none"},g);
+  arrow(g,448,250,676,250);
+  box(g,682,210,290,80,"#ece4ff","Regularization loss","λ × R(W)，只看 W");
+  el("circle",{cx:1030,cy:165,r:24,fill:"#fff",stroke:O,"stroke-width":3},g);
+  el("text",{x:1030,y:175,"font-size":28,"text-anchor":"middle",fill:DK,"font-weight":800},g,"+");
+  arrow(g,972,90,1012,148,3); arrow(g,972,240,1012,182,3);
+  arrow(g,1054,165,1082,165,3);
+  el("text",{x:1120,y:176,"font-size":34,"text-anchor":"middle",fill:DK,"font-weight":900,"font-style":"italic"},g,"L");
+})();
+
+/* ---------- 碗狀 loss 地形（示意） ---------- */
+(function(){
+  var g = $("bowl"); if (!g) return;
+  var cs = ["#f3c0b2","#f7d3c4","#fae4d4","#f2efdc","#dcecdf","#c2e1e6","#9fd0e0"];
+  for (var i=0;i<7;i++) el("ellipse",{cx:220,cy:160,rx:205-i*28,ry:140-i*19,fill:cs[i],stroke:"#fff","stroke-width":2},g);
+  var pts = [[48,72],[95,98],[138,122],[172,140],[196,152],[210,157]];
+  for (i=0;i<pts.length-1;i++) arrow(g,pts[i][0],pts[i][1],pts[i+1][0],pts[i+1][1],3);
+  el("circle",{cx:48,cy:72,r:8,fill:DK},g);
+  el("text",{x:30,y:52,"font-size":15,fill:DK,"font-weight":700},g,"起點：隨機的 W");
+  el("text",{x:220,y:200,"font-size":15,"text-anchor":"middle",fill:DK,"font-weight":800},g,"谷底：loss 最小");
+  el("text",{x:220,y:326,"font-size":14,"text-anchor":"middle",fill:RD,"font-weight":700},g,"示意：從上往下看的碗（外圈紅＝loss 高，中心藍＝loss 低）");
+})();
+
+/* ---------- 斜率示意 ---------- */
+(function(){
+  var g = $("slope"); if (!g) return;
+  var X = function(x){ return 225 + x*55; }, Y = function(y){ return 280 - y*20; };
+  el("text",{x:225,y:32,"font-size":16,"text-anchor":"middle",fill:DK,"font-weight":800},g,"示意：f(x) = x²");
+  el("line",{x1:30,y1:Y(0),x2:420,y2:Y(0),stroke:"#bbb","stroke-width":1.5},g);
+  var d = ""; for (var x=-3.5; x<=3.51; x+=0.05){ d += (d?"L":"M") + X(x).toFixed(1) + " " + Y(x*x).toFixed(1) + " "; }
+  el("path",{d:d,fill:"none",stroke:DK,"stroke-width":4},g);
+  el("line",{x1:X(1),y1:Y(0),x2:X(3),y2:Y(8),stroke:O,"stroke-width":2.5,"stroke-dasharray":"7 6"},g);
+  el("circle",{cx:X(2),cy:Y(4),r:8,fill:RD,stroke:"#fff","stroke-width":2},g);
+  el("text",{x:225,y:64,"font-size":15,"text-anchor":"middle",fill:RD,"font-weight":700},g,"紅點：x = 2，斜率是 4");
+  el("text",{x:225,y:86,"font-size":15,"text-anchor":"middle",fill:O},g,"斜率為正 → 往右是上坡");
+  el("text",{x:225,y:108,"font-size":15,"text-anchor":"middle",fill:GR,"font-weight":700},g,"所以往左（負斜率的方向）走 → 下坡");
+  arrow(g,X(2)-10,Y(4)+10,X(0.9),Y(0.81)-6,3.5);
+})();
+
+/* ---------- 訓練的資訊流 ---------- */
+(function(){
+  var g = $("infoflow"); if (!g) return;
+  box(g,0,10,180,70,"#fff","資料 (xᵢ, yᵢ)","固定，不會改",18);
+  box(g,240,10,200,70,"#d0ecf1","Score function","算出分數 f(xᵢ, W)",18);
+  box(g,440,120,195,80,"#fdefc4","Loss L","data loss + regularization",18);
+  box(g,240,220,200,70,"#ece4ff","Gradient","L 對 W 的 gradient",18);
+  box(g,0,220,180,70,"#e6f1d5","權重 W","從隨機值開始",18);
+  arrow(g,180,45,234,45,3);
+  el("text",{x:207,y:36,"font-size":13,"text-anchor":"middle",fill:MUT},g,"forward");
+  arrow(g,150,220,262,86,3);
+  arrow(g,420,80,500,116,3);
+  arrow(g,500,200,420,222,3);
+  arrow(g,240,255,186,255,3);
+  el("text",{x:213,y:246,"font-size":13,"text-anchor":"middle",fill:GR,"font-weight":700},g,"更新");
+  el("text",{x:330,y:150,"font-size":16,"text-anchor":"middle",fill:O,"font-weight":800},g,"↻ 重複");
+})();
+
+/* ---------- learning rate 圖 ---------- */
+(function(){
+  var g = $("lrchart"); if (!g) return;
+  var data = [[-10,2.200652],[-8,2.194116],[-6,1.647802],[-5,2.844355],[-3,254.086573],[-1,25392.214036]];
+  var X = function(e){ return 70 + (e+10)*50; }, Y = function(v){ return 330 - (Math.log10(v)+0.3)*52; };
+  el("line",{x1:60,y1:330,x2:540,y2:330,stroke:INK,"stroke-width":2},g);
+  [1,10,100,1000,10000].forEach(function(v){ el("text",{x:56,y:Y(v)+5,"font-size":13,"text-anchor":"end",fill:MUT},g,String(v)); el("line",{x1:60,y1:Y(v),x2:540,y2:Y(v),stroke:"#eee"},g); });
+  el("line",{x1:60,y1:Y(2.200718),x2:540,y2:Y(2.200718),stroke:O,"stroke-dasharray":"6 6","stroke-width":2},g);
+  el("text",{x:536,y:Y(2.200718)-8,"font-size":14,"text-anchor":"end",fill:O},g,"出發點的 loss 2.200718");
+  var d = data.map(function(p,i){ return (i?"L":"M")+X(p[0])+" "+Y(p[1]); }).join(" ");
+  el("path",{d:d,fill:"none",stroke:DK,"stroke-width":3},g);
+  data.forEach(function(p){
+    var best = p[0]===-6;
+    el("circle",{cx:X(p[0]),cy:Y(p[1]),r:best?9:6,fill:best?GR:(p[1]>10?RD:"#fff"),stroke:DK,"stroke-width":2},g);
+    el("text",{x:X(p[0]),y:356,"font-size":14,"text-anchor":"middle",fill:MUT},g,"1e"+p[0]);
+  });
+  el("text",{x:X(-6),y:Y(1.647802)+21,"font-size":15,"text-anchor":"middle",fill:GR,"font-weight":700},g,"1.647802 最低");
+  el("text",{x:X(-1)-8,y:Y(25392.214036)+34,"font-size":15,"text-anchor":"end",fill:RD,"font-weight":700},g,"25392.214036 爆掉");
+  el("text",{x:300,y:378,"font-size":14,"text-anchor":"middle",fill:MUT},g,"step size（越往右越大）");
+})();
+
+/* ---------- mini-batch ---------- */
+(function(){
+  var g = $("batch"); if (!g) return;
+  for (var r=0;r<12;r++) for (var c=0;c<18;c++){
+    var pick = (r>=4&&r<6&&c>=6&&c<10);
+    el("circle",{cx:20+c*24,cy:20+r*24,r:7,fill:pick?DK:"#d8d4c2"},g);
+  }
+  el("rect",{x:150,y:102,width:100,height:44,rx:10,fill:"none",stroke:O,"stroke-width":3},g);
+})();
+
+/* ---------- 電路圖 (x + y) z ---------- */
+(function(){
+  var g = $("circuit"); if (!g) return;
+  function wire(x1,y1,x2,y2){ el("line",{x1:x1,y1:y1,x2:x2,y2:y2,stroke:INK,"stroke-width":2},g); }
+  function val(x,y,fw,bw,lab){
+    if (lab) el("text",{x:x-10,y:y+6,"font-size":22,"text-anchor":"end","font-style":"italic",fill:INK},g,lab);
+    el("text",{x:x+8,y:y-10,"font-size":20,fill:GR,"font-weight":700},g,fw);
+    el("text",{x:x+8,y:y+28,"font-size":20,fill:RD,"font-weight":700},g,bw);
+  }
+  function gate(x,y,s){ el("circle",{cx:x,cy:y,r:28,fill:"#fff",stroke:O,"stroke-width":3},g); el("text",{x:x,y:y+9,"font-size":26,"text-anchor":"middle",fill:DK,"font-weight":800},g,s); }
+  wire(60,50,180,50); wire(60,140,180,140); wire(60,240,400,240);
+  wire(180,50,230,95); wire(180,140,230,95); wire(258,95,360,95); wire(360,95,412,150); wire(400,240,412,150); wire(440,150,580,150);
+  gate(244,95,"+"); gate(440,150,"×");
+  val(70,50,"−2","−4","x"); val(70,140,"5","−4","y"); val(70,240,"−4","3","z"); val(300,95,"3","−4",""); val(500,150,"−12","1","");
+  el("text",{x:348,y:86,"font-size":22,"font-style":"italic",fill:INK},g,"q"); el("text",{x:572,y:141,"font-size":22,"font-style":"italic",fill:INK},g,"f");
+})();
+
+/* ---------- 三種 gate（只使用 Wiki 中的數值） ---------- */
+(function(){
+  function mini(id, ins, sym, out, outg){
+    var g = $(id); if (!g) return;
+    ins.forEach(function(p,i){
+      var y = 30+i*60;
+      el("line",{x1:20,y1:y,x2:110,y2:y,stroke:INK,"stroke-width":2},g);
+      el("line",{x1:110,y1:y,x2:140,y2:60,stroke:INK,"stroke-width":2},g);
+      el("text",{x:24,y:y-8,"font-size":15,fill:GR,"font-weight":700},g,p[0]);
+      el("text",{x:24,y:y+20,"font-size":15,fill:RD,"font-weight":700},g,p[1]);
+    });
+    el("line",{x1:180,y1:60,x2:250,y2:60,stroke:INK,"stroke-width":2},g);
+    el("circle",{cx:160,cy:60,r:22,fill:"#fff",stroke:O,"stroke-width":3},g);
+    el("text",{x:160,y:67,"font-size":sym.length>1?15:22,"text-anchor":"middle",fill:DK,"font-weight":800},g,sym);
+    el("text",{x:196,y:50,"font-size":15,fill:GR,"font-weight":700},g,out);
+    el("text",{x:196,y:80,"font-size":15,fill:RD,"font-weight":700},g,outg);
+  }
+  mini("g-add",[["","2.00"],["","2.00"]],"+","","2.00");
+  mini("g-max",[["z 2","2.00"],["w −1","0"]],"max","","2.00");
+  mini("g-mul",[["x","−8.00"],["y −4.00",""]],"×","","2.00");
+})();
+
+/* ---------- 資料前處理的三條數線 ---------- */
+(function(){
+  var g = $("prep"); if (!g) return;
+  var P = [["原始像素",["0","","255"],0,1,"#fdefc4"],["① 減去平均影像",["約 −127","0","127"],0.5,0.5,"#e6f1d5"],["② 縮放",["−1","0","1"],0.5,0.5,"#d0ecf1"]];
+  P.forEach(function(p,i){
+    var x0 = i*410, L = 300, zx = x0 + 20 + p[2]*L;
+    el("text",{x:x0+170,y:24,"font-size":19,"text-anchor":"middle",fill:DK,"font-weight":800},g,p[0]);
+    el("line",{x1:x0+10,y1:86,x2:x0+330,y2:86,stroke:INK,"stroke-width":2},g);
+    el("rect",{x:x0+20,y:66,width:L,height:40,rx:10,fill:p[4],stroke:O,"stroke-width":2},g);
+    el("line",{x1:zx,y1:54,x2:zx,y2:118,stroke:DK,"stroke-width":3},g);
+    el("text",{x:x0+20,y:140,"font-size":16,"text-anchor":"middle",fill:MUT},g,p[1][0]);
+    if (p[1][1]) el("text",{x:x0+170,y:140,"font-size":16,"text-anchor":"middle",fill:DK,"font-weight":700},g,p[1][1]);
+    el("text",{x:x0+320,y:140,"font-size":16,"text-anchor":"middle",fill:MUT},g,p[1][2]);
+    if (i<2) arrow(g,x0+342,86,x0+400,86,3.5);
+  });
+  el("text",{x:20,y:170,"font-size":15,fill:MUT},g,"原始像素全部是正數；減去平均之後，中心移到 0；縮放之後，範圍變小。");
+})();
+
+/* ---------- 學習的迴圈 ---------- */
+(function(){
+  var g = $("loop"); if (!g) return;
+  box(g,230,20,240,84,"#d0ecf1","① Score function","f = Wx + b（第二站）",19);
+  box(g,450,190,245,90,"#fdefc4","② Loss","data loss + λR(W)（第三站）",19);
+  box(g,230,370,240,90,"#ece4ff","③ Backpropagation","算出 L 對 W 的 gradient",19);
+  box(g,5,190,245,90,"#e6f1d5","④ Gradient descent","W 往負 gradient 走一步",19);
+  arrow(g,470,62,560,184,3.5); arrow(g,560,282,470,370,3.5); arrow(g,230,410,140,284,3.5); arrow(g,140,188,230,64,3.5);
+  el("text",{x:350,y:230,"font-size":20,"text-anchor":"middle",fill:O,"font-weight":800},g,"↻ 重複");
+  el("text",{x:350,y:258,"font-size":16,"text-anchor":"middle",fill:MUT},g,"每次用一小批資料");
+  el("text",{x:350,y:280,"font-size":16,"text-anchor":"middle",fill:MUT},g,"（mini-batch）");
+})();
+
+/* ---------- 下集預告：三個元件 ---------- */
+(function(){
+  var g = $("frame"); if (!g) return;
+  box(g,0,20,440,110,"#fdefc4","Score function","這集：f = Wx + b　→　下集：神經網路、CNN",22);
+  arrow(g,445,75,486,75,4);
+  box(g,492,20,300,110,"#fff","Loss function","SVM／Softmax + λR(W)",22);
+  arrow(g,797,75,838,75,4);
+  box(g,844,20,310,110,"#fff","Optimization","backprop 算 gradient → GD",22);
+  el("text",{x:220,y:158,"font-size":16,"text-anchor":"middle",fill:O,"font-weight":700},g,"↑ 下集要換掉的，只有這一格");
+})();
+
+/* ================= 導覽 ================= */
+var slides = Array.prototype.slice.call(document.querySelectorAll(".slide"));
+var stage = $("stage"), bar = $("bar"), num = $("num"), ov = $("overview");
+var cur = 0, typed = "";
+function fit(){ var s = Math.min(window.innerWidth/1440, window.innerHeight/810) * 0.97; stage.style.transform = "translate(-50%,-50%) scale(" + s + ")"; }
+function show(i){
+  cur = Math.max(0, Math.min(slides.length-1, i));
+  slides.forEach(function(s,k){ s.classList.toggle("active", k===cur); });
+  bar.style.width = ((cur+1)/slides.length*100) + "%";
+  num.textContent = (cur+1) + " / " + slides.length;
+  try { history.replaceState(null, "", "#" + (cur+1)); } catch(e) {}
+}
+slides.forEach(function(s,i){
+  var b = document.createElement("button");
+  b.innerHTML = "<b>" + (i+1) + "</b>" + (s.getAttribute("data-title") || "");
+  b.onclick = function(){ ov.classList.remove("on"); show(i); };
+  ov.appendChild(b);
+});
+function toggleOv(){ ov.classList.toggle("on"); Array.prototype.forEach.call(ov.children, function(b,i){ b.classList.toggle("cur", i===cur); }); }
+document.addEventListener("keydown", function(e){
+  if (e.key==="o"||e.key==="O"){ toggleOv(); return; }
+  if (ov.classList.contains("on")){ if (e.key==="Escape") ov.classList.remove("on"); return; }
+  if (["ArrowRight","PageDown"," ","ArrowDown"].indexOf(e.key)>=0){ e.preventDefault(); show(cur+1); }
+  else if (["ArrowLeft","PageUp","ArrowUp","Backspace"].indexOf(e.key)>=0){ e.preventDefault(); show(cur-1); }
+  else if (e.key==="Home") show(0);
+  else if (e.key==="End") show(slides.length-1);
+  else if (/^[0-9]$/.test(e.key)) typed += e.key;
+  else if (e.key==="Enter" && typed){ show(parseInt(typed,10)-1); typed=""; }
+});
+var tx = null;
+document.addEventListener("touchstart", function(e){ tx = e.touches[0].clientX; }, {passive:true});
+document.addEventListener("touchend", function(e){ if (tx===null) return; var dx = e.changedTouches[0].clientX - tx; if (Math.abs(dx)>50) show(cur + (dx<0?1:-1)); tx=null; });
+document.addEventListener("click", function(e){ if (ov.classList.contains("on") || e.target.closest("button")) return; show(cur + (e.clientX > window.innerWidth/2 ? 1 : -1)); });
+window.addEventListener("resize", fit);
+fit();
+var h = parseInt((location.hash||"").slice(1),10);
+show(isNaN(h) ? 0 : h-1);
+})();
+</script>
+</body>
+</html>

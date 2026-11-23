@@ -30,9 +30,9 @@ updated: 2026-11-23
 
 ## 直觀理解
 
-[kNN](k-nearest-neighbor.md) 的做法是把所有訓練圖片都記下來，每次預測都要從頭比對一遍。Linear classifier 換了一個思路：**從訓練資料中提煉出一小組參數，之後就只靠這組參數做判斷**。
+[KNN](k-nearest-neighbor.md) 的做法是把所有訓練圖片都記下來，每次預測都要從頭比對一遍。Linear classifier 換了一個思路：**從訓練資料中提煉出一小組參數，之後就只靠這組參數做判斷**。
 
-可以想成：kNN 是帶著整本圖鑑去考試；linear classifier 則是讀完圖鑑後，只帶一張「重點筆記」（權重 W）進考場。
+可以想成：KNN 是帶著整本圖鑑去考試；linear classifier 則是讀完圖鑑後，只帶一張「重點筆記」（權重 W）進考場。
 
 這是整個深度學習框架的起點。CS231n 把方法拆成兩個部分 [CS231n linear-classify "Linear Classification"]：
 
@@ -149,7 +149,7 @@ CS231n 預告的解法是神經網路：hidden layer 的中間 neuron 可以分�
 
 ## Parametric 與 Non-parametric
 
-| | kNN（non-parametric） | Linear classifier（parametric） |
+| | KNN（non-parametric） | Linear classifier（parametric） |
 |---|---|---|
 | 訓練 | 只把資料存起來 | 學出 W、b |
 | 預測時需要什麼 | 整個 training set | 只要參數 |
@@ -160,7 +160,7 @@ CS231n 預告的解法是神經網路：hidden layer 的中間 neuron 可以分�
 
 ## 出現在哪些地方
 
-- [Image Classification](../tasks/image-classification.md)：kNN 之後的第二個方法
+- [Image Classification](../tasks/image-classification.md)：KNN 之後的第二個方法
 - [Loss Function](loss-function.md)、[Softmax／Cross-Entropy](softmax-cross-entropy.md)：用來評估和訓練 linear classifier
 - [Regularization](regularization.md)：限制 W 的大小
 - [CIFAR-10](../datasets/cifar-10.md)：筆記中的例子

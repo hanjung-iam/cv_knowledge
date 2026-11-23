@@ -36,7 +36,7 @@ updated: 2026-11-23
 
 ### 什麼是 hyperparameter
 
-以 [kNN](k-nearest-neighbor.md) 為例，k 要設多少、要用 L1 還是 L2 距離，這些選擇就是 hyperparameter。它們在許多機器學習演算法中都會出現，而且通常沒有明顯的正確答案 [CS231n classification "Validation sets for Hyperparameter tuning"]。
+以 [KNN](k-nearest-neighbor.md) 為例，k 要設多少、要用 L1 還是 L2 距離，這些選擇就是 hyperparameter。它們在許多機器學習演算法中都會出現，而且通常沒有明顯的正確答案 [CS231n classification "Validation sets for Hyperparameter tuning"]。
 
 ### 為什麼不能用 test set 調參數
 

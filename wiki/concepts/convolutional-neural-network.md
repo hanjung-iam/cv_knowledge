@@ -29,7 +29,7 @@ updated: 2026-11-23
 
 ## 直觀理解
 
-前面的 Wiki 已經走過一條路：[kNN](k-nearest-neighbor.md) 直接比對像素，行不通；[linear classifier](linear-classifier.md) 每個類別只能學一個模板，太弱；[神經網路](neural-network.md)把 linear classifier 疊起來、中間插入非線性，解決了「一類一個模板」的問題，但它的全連接結構不適合影像（見下一節）。CNN 是這條路的下一站。
+前面的 Wiki 已經走過一條路：[KNN](k-nearest-neighbor.md) 直接比對像素，行不通；[linear classifier](linear-classifier.md) 每個類別只能學一個模板，太弱；[神經網路](neural-network.md)把 linear classifier 疊起來、中間插入非線性，解決了「一類一個模板」的問題，但它的全連接結構不適合影像（見下一節）。CNN 是這條路的下一站。
 
 CNN 並沒有推翻前面學到的東西。CS231n 強調，它和一般的[神經網路](neural-network.md)非常相似 [CS231n convolutional-networks "Convolutional Neural Networks (CNNs / ConvNets)"]：
 
@@ -183,5 +183,5 @@ CNN 換掉的只是 **score function**，[loss function](loss-function.md)、[op
 
 - [Convolutional Layer](convolutional-layer.md)、[Pooling Layer](pooling-layer.md)：CNN 的主要元件
 - [AlexNet](../models/alexnet.md)、[VGGNet](../models/vggnet.md)：經典架構
-- [Image Classification](../tasks/image-classification.md)：kNN、linear classifier 之後的方法
+- [Image Classification](../tasks/image-classification.md)：KNN、linear classifier 之後的方法
 - [ILSVRC](../datasets/ilsvrc.md)：歷年冠軍都是 CNN
