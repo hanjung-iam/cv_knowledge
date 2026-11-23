@@ -1,0 +1,102 @@
+---
+title: Image Classification
+type: task
+metrics: [accuracy]
+aliases: [影像分類, 圖像分類]
+tags: [task, core-problem]
+sources: [CS231n]
+related:
+  - concepts/k-nearest-neighbor.md
+  - concepts/hyperparameter-tuning.md
+  - datasets/cifar-10.md
+created: 2026-11-22
+updated: 2026-11-22
+---
+
+# Image Classification（影像分類）
+
+## 一句話說明
+
+給電腦一張圖片，讓它從一組**事先固定好的類別**中，選出最符合的一個標籤 [CS231n classification "Image Classification"]。
+
+## 直觀理解
+
+人看到一張貓的照片，一眼就知道那是貓。但電腦「看到」的不是貓，而是一大片數字。
+
+CS231n 的例子：一張寬 248、高 400 像素的彩色貓咪照片，對電腦來說是 248 × 400 × 3 個數字（3 代表紅、綠、藍三個顏色通道），總共 297,600 個數字。每個數字都是 0（黑）到 255（白）之間的整數。影像分類的任務，就是把這二十幾萬個數字變成一個標籤，例如「cat」[CS231n classification "Image Classification"]。
+
+模型通常不只輸出一個答案，而是對每個類別給出一個機率，表示它有多確定。筆記的示意圖中，模型對這張貓的輸出是 82% cat、15% dog、2% hat、1% mug [CS231n classification "Image Classification" 圖]。
+
+為什麼要先學分類？CS231n 指出，分類雖然簡單，卻是 Computer Vision 的核心問題之一，有大量實際應用，而且許多看起來不一樣的任務，例如 object detection、segmentation，都可以化約成分類問題 [CS231n classification "Image Classification"]。
+
+## 輸入與輸出
+
+| | 內容 |
+|---|---|
+| 輸入 | 一張影像：寬 × 高 × 3 的數字陣列，數值範圍 0～255 [CS231n classification "Image Classification"] |
+| 輸出 | 一個類別標籤，或是在所有類別上的機率分布 [CS231n classification "Image Classification" 圖] |
+
+## 為什麼這件事對電腦很難
+
+CS231n 列出的難點如下。它強調這份清單並不完整 [CS231n classification "Image Classification"]。下表用筆記示意圖中的例子說明：
+
+| 難點 | 意思 | 筆記示意圖的例子 |
+|---|---|---|
+| Viewpoint variation（視角變化） | 同一個物體從不同角度拍，看起來完全不同 | 同一座雕像的三個角度 |
+| Scale variation（尺度變化） | 同一類物體的實際大小差異很大 | 高矮差距很大的兩個人都拿著筆電 |
+| Deformation（形變） | 很多物體不是剛體，可以扭曲變形 | 姿勢誇張的貓 |
+| Occlusion（遮蔽） | 物體可能只露出一小部分 | 只從牆後露出頭頂的貓 |
+| Illumination conditions（光照） | 光線變化在像素層級的影響非常劇烈 | 不同打光下的同一組企鵝模型 |
+| Background clutter（背景雜亂） | 物體可能和背景融在一起 | 花紋和背景很像的豹紋貓 |
+| Intra-class variation（類內差異） | 同一類別的成員外觀差很多 | 各種造型的椅子 |
+
+（示意圖的描述依據 [CS231n classification "Image Classification" 圖]。）
+
+一個好的分類模型，必須**對這些變化的各種組合都保持不變（invariant）**，同時**對不同類別之間的差異保持敏感** [CS231n classification "Image Classification"]。這兩個要求之間的拉扯，是理解後面所有模型設計的關鍵。
+
+## 解法的思路：Data-driven Approach（資料驅動方法）
+
+排序數字可以寫成明確的演算法，但「怎麼辨認貓」很難寫成程式規則。因此 CS231n 採取的做法，就像教小孩一樣：**給電腦看很多每個類別的範例，讓學習演算法自己學出每個類別長什麼樣子**。這種方法依賴先蒐集一個有標籤的 training dataset，所以叫做 data-driven approach [CS231n classification "Image Classification"]。
+
+完整流程分成三步 [CS231n classification "Image Classification"]：
+
+1. **Input**：N 張影像，每張標有 K 個類別中的一個，這就是 training set。
+2. **Learning**：用 training set 學出每個類別的樣子，稱為 training a classifier 或 learning a model。
+3. **Evaluation**：讓分類器預測一批**它從沒看過的新影像**，再和真正的標籤（ground truth）比對。
+
+## 評估指標
+
+- **Accuracy**：預測正確的比例。這是影像分類最常用的評估標準 [CS231n classification "Nearest Neighbor Classifier"]。
+- 評估必須在沒看過的資料上進行，而且 test set 只能在最後用一次，詳見 [Hyperparameter Tuning](../concepts/hyperparameter-tuning.md)。
+
+## 方法演進
+
+目前 Wiki 只收錄了最早的 baseline，之後隨著來源增加會持續補充。
+
+| 方法 | 核心想法 | CIFAR-10 accuracy | 頁面 |
+|---|---|---|---|
+| Nearest Neighbor（L1 距離） | 找訓練集中最像的那張圖，直接沿用它的標籤 | 38.6% [CS231n classification "Nearest Neighbor Classifier"] | [k-Nearest Neighbor](../concepts/k-nearest-neighbor.md) |
+| Nearest Neighbor（L2 距離） | 同上，換成歐氏距離 | 35.4% [CS231n classification "Nearest Neighbor Classifier"] | [k-Nearest Neighbor](../concepts/k-nearest-neighbor.md) |
+
+參考線：
+
+- 隨機猜測：10%（10 個類別）[CS231n classification "Nearest Neighbor Classifier"]
+- 人類：估計約 94% [CS231n classification "Nearest Neighbor Classifier"]
+- （截至 CS231n 筆記撰寫時）state-of-the-art CNN：約 95%，與人類相當 [CS231n classification "Nearest Neighbor Classifier"]
+
+### 下一步：為什麼需要超越 raw pixel
+
+kNN 的失敗點出了這個領域的核心問題：直接比較像素，反映的是**背景和顏色分布**，而不是物體**是什麼**。例如狗和青蛙，只因為都在白色背景上，就被判定為相近 [CS231n classification "Pros and Cons of Nearest Neighbor classifier"]。CS231n 的結論是：要讓同一類別的影像聚在一起、不受背景等無關因素影響，就**必須超越 raw pixel** [CS231n classification "Pros and Cons of Nearest Neighbor classifier"]。
+
+CS231n 也預告，後續課程的方法可以做到：
+- 約 90% 的 accuracy [CS231n classification "Summary"]
+- 學完之後就可以丟掉 training set [CS231n classification "Summary"]
+- 每張測試影像不到一毫秒就能分類完 [CS231n classification "Summary"]
+
+這些方法（線性分類器、神經網路、CNN）會在之後 ingest 對應來源時補進這一節。
+
+## 相關概念
+
+- [k-Nearest Neighbor](../concepts/k-nearest-neighbor.md)：第一個 baseline
+- [Hyperparameter Tuning](../concepts/hyperparameter-tuning.md)：如何正確地調整與評估
+- [CIFAR-10](../datasets/cifar-10.md)：入門常用的資料集
