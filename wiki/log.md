@@ -51,3 +51,12 @@ Append-only 操作紀錄。格式：`## [YYYY-MM-DD] <type> | <title>`，type �
 - 第 4 節：公式用 $…$；避免方括號括住英文開頭內容
 - 第 5 節：aliases 等 frontmatter 欄位也須有來源支持
 - 第 6 節：段落／清單／表格的引用涵蓋規則；lint 相應修改並以假 Wiki 測試
+
+## [2026-11-23] ingest | CS231n — optimization-1
+- 新增：concepts/optimization.md, concepts/gradient-descent.md, datasets/ilsvrc.md
+- 更新：concepts/loss-function.md, concepts/regularization.md, concepts/hyperparameter-tuning.md, concepts/linear-classifier.md, tasks/image-classification.md, datasets/cifar-10.md, overview.md, sources/cs231n.md, index.md
+- 數字核對：28 項對照原文全部吻合
+- 自查：補 1 處評價性判斷的引用
+- lint：第一輪即 0 error / 0 warning
+- 檢查點 A：拆兩頁；Wiki 統一用 λ（註明 α）；ILSVRC 先建頁
+- 檢查點 B：通過

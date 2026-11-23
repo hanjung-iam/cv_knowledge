@@ -1,6 +1,6 @@
 # Lint Report (2026-11-23)
 
-頁面數：10　|　error：0　warning：0　info：9
+頁面數：13　|　error：0　warning：0　info：7
 
 ## Errors
 （無）
@@ -13,8 +13,6 @@
 - `raw/papers/2016_Deep-Residual-Learning-for-Image-Recognition.pdf`：尚未 ingest（沒有 source 頁的 raw_path 指向它）
 - `raw/tutorials/convolutional-networks.md`：尚未 ingest（沒有 source 頁的 raw_path 指向它）
 - `raw/tutorials/convolutional-networks.pdf`：尚未 ingest（沒有 source 頁的 raw_path 指向它）
-- `raw/tutorials/optimization-1.md`：尚未 ingest（沒有 source 頁的 raw_path 指向它）
-- `raw/tutorials/optimization-1.pdf`：尚未 ingest（沒有 source 頁的 raw_path 指向它）
 - `raw/tutorials/optimization-2.md`：尚未 ingest（沒有 source 頁的 raw_path 指向它）
 - `raw/tutorials/optimization-2.pdf`：尚未 ingest（沒有 source 頁的 raw_path 指向它）
 - 來源差異統計：未釐清 0、已釐清 0

@@ -11,6 +11,8 @@ related:
   - concepts/loss-function.md
   - concepts/hyperparameter-tuning.md
   - datasets/cifar-10.md
+  - concepts/optimization.md
+  - concepts/gradient-descent.md
 created: 2026-11-22
 updated: 2026-11-23
 ---
@@ -79,7 +81,7 @@ CS231n 列出的難點如下。它強調這份清單並不完整 [CS231n classif
 |---|---|---|---|
 | Nearest Neighbor（L1 距離） | 找訓練集中最像的那張圖，直接沿用它的標籤 | 38.6% [CS231n classification "Nearest Neighbor Classifier"] | [k-Nearest Neighbor](../concepts/k-nearest-neighbor.md) |
 | Nearest Neighbor（L2 距離） | 同上，換成歐氏距離 | 35.4% [CS231n classification "Nearest Neighbor Classifier"] | [k-Nearest Neighbor](../concepts/k-nearest-neighbor.md) |
-| Linear classifier（SVM／Softmax loss） | 學出一組權重 W，每個類別一個「模板」，分數 = Wx + b | 來源未提供 | [Linear Classifier](../concepts/linear-classifier.md) |
+| Linear classifier（SVM／Softmax loss） | 學出一組權重 W，每個類別一個「模板」，分數 = Wx + b | 用 random search 訓練：約 15.5%；用 random local search 訓練：21.4%（只反映很差的最佳化方法）[CS231n optimization-1 "Strategy #1: A first very bad idea solution: Random search"; CS231n optimization-1 "Strategy #2: Random Local Search"] | [Linear Classifier](../concepts/linear-classifier.md) |
 
 參考線：
 
@@ -106,7 +108,13 @@ CS231n 也預告，後續課程的方法可以做到：
 
 但它還沒有真正「超越 raw pixel」：每個類別只有**一個模板**，所以朝左和朝右的馬會被混成一匹兩個頭的馬，各種顏色的車會被混成一輛紅色的車 [CS231n linear-classify "Interpreting a linear classifier"]。CS231n 預告，神經網路可以用多個中間神經元分別偵測不同類型的物體，再把它們組合起來 [CS231n linear-classify "Interpreting a linear classifier"]。
 
-最佳化（怎麼找到讓 loss 最小的 W）、神經網路和 CNN，會在之後 ingest 對應來源時補進這一節。
+### 第三步：學習的閉環 — Optimization
+
+有了 score function 和 loss，還需要找到讓 loss 最小的參數。CS231n 的做法是 **iterative refinement**：從隨機的 W 出發，用 [gradient descent](../concepts/gradient-descent.md) 一步一步改進 [CS231n optimization-1 "Strategy #1: A first very bad idea solution: Random search"; CS231n optimization-1 "Gradient Descent"]。詳見 [Optimization](../concepts/optimization.md)。
+
+到這裡，「score function + loss function + optimization」三個元件都到齊了。CS231n 預告，接下來只要把 score function 換成神經網路、CNN，loss 和最佳化的過程大致不變 [CS231n optimization-1 "Introduction"]。
+
+神經網路和 CNN，會在之後 ingest 對應來源時補進這一節。
 
 ## 相關概念
 

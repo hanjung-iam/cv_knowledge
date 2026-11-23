@@ -13,6 +13,8 @@ related:
   - concepts/k-nearest-neighbor.md
   - concepts/hyperparameter-tuning.md
   - concepts/linear-classifier.md
+  - concepts/optimization.md
+  - datasets/ilsvrc.md
 created: 2026-11-22
 updated: 2026-11-23
 ---
@@ -49,10 +51,12 @@ updated: 2026-11-23
 | 隨機猜測 | 10 類 | 10% [CS231n classification "Nearest Neighbor Classifier"] | |
 | Nearest Neighbor | L1 距離 | 38.6% [CS231n classification "Nearest Neighbor Classifier"] | [kNN](../concepts/k-nearest-neighbor.md) |
 | Nearest Neighbor | L2 距離 | 35.4% [CS231n classification "Nearest Neighbor Classifier"] | [kNN](../concepts/k-nearest-neighbor.md) |
+| Linear classifier（SVM loss） | 用 random search 訓練（1000 次） | 約 15.5% [CS231n optimization-1 "Strategy #1: A first very bad idea solution: Random search"] | [Optimization](../concepts/optimization.md) |
+| Linear classifier（SVM loss） | 用 random local search 訓練（1000 次） | 21.4% [CS231n optimization-1 "Strategy #2: Random Local Search"] | [Optimization](../concepts/optimization.md) |
 | 人類 | 估計值 | 約 94% [CS231n classification "Nearest Neighbor Classifier"] | |
 | CNN | （截至 CS231n 筆記撰寫時）state-of-the-art | 約 95% [CS231n classification "Nearest Neighbor Classifier"] | |
 
-**Linear classifier 在 CIFAR-10 上的設定**：每張影像是 3072 × 1 的向量，W 是 10 × 3072，b 是 10 × 1；使用 bias trick 之後，分別變成 3073 × 1 和 10 × 3073 [CS231n linear-classify "Parameterized mapping from images to label scores"; CS231n linear-classify "Interpreting a linear classifier"]。CS231n 的這篇筆記**沒有提供** linear classifier 在 CIFAR-10 上的 accuracy。
+**Linear classifier 在 CIFAR-10 上的設定**：每張影像是 3072 × 1 的向量，W 是 10 × 3072，b 是 10 × 1；使用 bias trick 之後，分別變成 3073 × 1 和 10 × 3073 [CS231n linear-classify "Parameterized mapping from images to label scores"; CS231n linear-classify "Interpreting a linear classifier"]。W 加上 bias 共有 30,730 個參數 [CS231n optimization-1 "Visualizing the loss function"]。linear-classify 筆記**沒有提供** linear classifier 在 CIFAR-10 上的 accuracy；optimization-1 筆記則提供了用很差的最佳化方法訓練的結果，見下表。
 
 **從學到的模板看資料集的特性**：linear classifier 學出的 car 模板是紅色的，這暗示 CIFAR-10 裡紅色的車比其他顏色多；horse 模板有兩個頭，反映資料中同時有朝左和朝右的馬 [CS231n linear-classify "Interpreting a linear classifier"]。詳見 [Linear Classifier](../concepts/linear-classifier.md)。
 

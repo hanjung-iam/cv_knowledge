@@ -10,6 +10,8 @@ related:
   - concepts/softmax-cross-entropy.md
   - concepts/regularization.md
   - concepts/hyperparameter-tuning.md
+  - concepts/optimization.md
+  - concepts/gradient-descent.md
 created: 2026-11-23
 updated: 2026-11-23
 ---
@@ -84,6 +86,10 @@ $$
 - 這裡的寫法依循 Weston and Watkins 1999 的版本。其他常見做法還有 **One-Vs-All（OVA）**、All-vs-All（AVA）和 Structured SVM [CS231n linear-classify "Practical Considerations"]。
 - CS231n 認為這裡的版本是安全的選擇，但最簡單的 OVA 很可能效果差不多。這個看法引用自 Rifkin et al. 2004 [CS231n linear-classify "Practical Considerations"]。
 
+### SVM loss 的形狀：分段線性、convex
+
+每個樣本的 SVM loss，是好幾個「在 0 截斷的線性函數」相加，所以是**分段線性**的；很多樣本平均之後，會形成碗狀，也就是 **convex function** [CS231n optimization-1 "Visualizing the loss function"]。換成神經網路之後，loss 會變成 non-convex。詳見 [Optimization](optimization.md)。
+
 ### 不可微的問題
 
 $\max(x, y)$ 在 $x = y$ 的地方有一個「折角」（kink），嚴格來說不可微。但實務上這不是問題，通常用 **subgradient** 處理 [CS231n linear-classify "Practical Considerations"]。CS231n（以及一般的神經網路）都直接最佳化沒有約束的 primal 形式，不使用 kernel、dual、SMO 等傳統 SVM 技巧 [CS231n linear-classify "Practical Considerations"]。
@@ -116,6 +122,7 @@ $\max(x, y)$ 在 $x = y$ 的地方有一個「折角」（kink），嚴格來說
 - [Softmax／Cross-Entropy](softmax-cross-entropy.md)：另一種 loss
 - [Regularization](regularization.md)：完整 loss 的第二部分
 - [Hyperparameter Tuning](hyperparameter-tuning.md)：$\lambda$ 用 cross-validation 決定
+- [Optimization](optimization.md)、[Gradient Descent](gradient-descent.md)：找出讓 loss 最小的參數
 
 ## 常見誤解
 

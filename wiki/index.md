@@ -21,11 +21,14 @@ Computer Vision 知識庫總目錄。每次 ingest 或新增頁面時更新。
 - [Loss Function](concepts/loss-function.md) — data loss + regularization loss；Multiclass SVM（hinge）loss；SVM vs Softmax（sources: 1）
 - [Softmax and Cross-Entropy Loss](concepts/softmax-cross-entropy.md) — 分數轉「機率」；資訊理論與 MLE 詮釋；數值穩定（sources: 1）
 - [Regularization](concepts/regularization.md) — L2 penalty；消除 W 的不唯一性；小而分散的權重泛化較好（sources: 1）
-- [Hyperparameter Tuning](concepts/hyperparameter-tuning.md) — validation set、cross-validation、test set 只用一次；λ 要調、Δ 不用調（sources: 1）
+- [Optimization](concepts/optimization.md) — loss landscape、convex 與 non-convex、三種策略、iterative refinement（sources: 1）
+- [Gradient Descent](concepts/gradient-descent.md) — numerical 與 analytic gradient、gradient check、learning rate、mini-batch／SGD（sources: 1）
+- [Hyperparameter Tuning](concepts/hyperparameter-tuning.md) — validation set、cross-validation、test set 只用一次；λ 要調、Δ 不用調；learning rate、batch size（sources: 1）
 
 ## Datasets
 
 - [CIFAR-10](datasets/cifar-10.md) — 60,000 張 32×32 影像、10 類的入門資料集（sources: 1）
+- [ILSVRC](datasets/ilsvrc.md) — 大規模影像分類挑戰賽，約 120 萬張訓練影像（內容很少）（sources: 1）
 
 ## Comparisons
 
@@ -35,4 +38,4 @@ Computer Vision 知識庫總目錄。每次 ingest 或新增頁面時更新。
 
 | cite key | 頁面 | 說明 |
 |---|---|---|
-| `CS231n` | [CS231n 課程筆記](sources/cs231n.md) | Stanford CS231n 課程筆記（已 ingest：classification、linear-classify） |
+| `CS231n` | [CS231n 課程筆記](sources/cs231n.md) | Stanford CS231n 課程筆記（已 ingest：classification、linear-classify、optimization-1） |

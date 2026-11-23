@@ -12,6 +12,8 @@ related:
   - concepts/k-nearest-neighbor.md
   - tasks/image-classification.md
   - datasets/cifar-10.md
+  - concepts/optimization.md
+  - concepts/gradient-descent.md
 created: 2026-11-23
 updated: 2026-11-23
 ---
@@ -127,6 +129,21 @@ CS231n 預告的解法是神經網路：hidden layer 的中間神經元可以分
 - **Centering（中心化）**：計算所有訓練影像的 **mean image（平均影像）**，再從每張影像減掉它，像素範圍大約變成 −127～127 [CS231n linear-classify "Interpreting a linear classifier"]。
 - **Scaling（縮放）**：再把每個特徵縮放到 −1～1 [CS231n linear-classify "Interpreting a linear classifier"]。
 - 其中 zero mean centering 可以說比較重要，但原因要等學到 gradient descent 的動態之後才能解釋 [CS231n linear-classify "Interpreting a linear classifier"]。
+
+## 怎麼找到好的 W
+
+定義好 score function 和 loss 之後，還需要**最佳化**，也就是找出讓 loss 最小的 W。詳見 [Optimization](optimization.md) 和 [Gradient Descent](gradient-descent.md)。
+
+最佳化方法的好壞影響很大。在 CIFAR-10 上，用 SVM loss 訓練 linear classifier（筆記的範例中，W 是 10 × 3073）：
+
+| 最佳化方法 | loss 評估次數 | test accuracy |
+|---|---|---|
+| Random search | 1000 | 約 15.5% |
+| Random local search | 1000 | 21.4% |
+
+（表中數值依據 [CS231n optimization-1 "Strategy #1: A first very bad idea solution: Random search"; CS231n optimization-1 "Strategy #2: Random Local Search"]。）
+
+這兩個數字只反映**很差的最佳化方法**，不是 linear classifier 的能力上限。用 gradient descent 訓練的結果，目前收錄的來源沒有提供。
 
 ## Parametric 與 Non-parametric
 

@@ -11,6 +11,7 @@ related:
   - datasets/cifar-10.md
   - concepts/regularization.md
   - concepts/loss-function.md
+  - concepts/gradient-descent.md
 created: 2026-11-22
 updated: 2026-11-23
 ---
@@ -78,12 +79,18 @@ Linear classifier 有兩個看起來都需要調的 hyperparameter：
 
 另外，「要用 hinge loss 還是 squared hinge loss」這種**方法上的選擇**，也可以用 cross-validation 決定 [CS231n linear-classify "Multiclass Support Vector Machine loss"]。
 
+### 訓練時的 hyperparameter
+
+- **Learning rate（step size）**：CS231n 說它會成為訓練神經網路時**最重要、也最令人頭痛的 hyperparameter 之一** [CS231n optimization-1 "Computing the gradient numerically with finite differences"]。太小會很慢，太大則會走過頭，讓 loss 變高。詳見 [Gradient Descent](gradient-descent.md)。
+- **Batch size**：雖然是 hyperparameter，但**通常不用 cross-validation 來選**，而是依記憶體限制決定，或直接設成 32、64、128 這類 2 的次方 [CS231n optimization-1 "Gradient Descent"]。
+
 這說明了一件事：先理解 hyperparameter 之間的關係，可以減少需要搜尋的組合（綜合推論，依據 [CS231n linear-classify "Practical Considerations"]）。
 
 ## 出現在哪些地方
 
 - [k-Nearest Neighbor](k-nearest-neighbor.md)：用來選擇 k 和距離函數
 - [Regularization](regularization.md)：用來選擇 $\lambda$
+- [Gradient Descent](gradient-descent.md)：learning rate、batch size
 - [Image Classification](../tasks/image-classification.md)：所有分類方法的評估流程都適用
 - 之後所有深度學習模型的 learning rate、層數等 hyperparameter，也遵循同樣的原則（綜合推論，依據 [CS231n classification "Validation sets for Hyperparameter tuning"]：原文說 hyperparameter「come up very often in the design of many Machine Learning algorithms」）
 

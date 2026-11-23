@@ -13,6 +13,9 @@ related:
   - concepts/regularization.md
   - concepts/hyperparameter-tuning.md
   - datasets/cifar-10.md
+  - concepts/optimization.md
+  - concepts/gradient-descent.md
+  - datasets/ilsvrc.md
 created: 2026-11-22
 updated: 2026-11-23
 ---
@@ -20,7 +23,7 @@ updated: 2026-11-23
 # Overview：Computer Vision 的演進主線
 
 > 這頁是整個 Wiki 的入口，會隨著每次 ingest 更新。
-> 目前收錄的來源：CS231n（classification、linear-classify）。
+> 目前收錄的來源：CS231n（classification、linear-classify、optimization-1）。
 
 ## Computer Vision 要解決什麼問題
 
@@ -52,9 +55,19 @@ updated: 2026-11-23
 
 CS231n 的伏筆是：CNN 從像素映射到分數的方式和這裡完全一樣，只是 $f$ 更複雜 [CS231n linear-classify "Parameterized mapping from images to label scores"]。
 
+### 第四站：Optimization — 學習的閉環
+
+最後一個元件是 [optimization](concepts/optimization.md)：找出讓 loss 最小的參數 [CS231n optimization-1 "Introduction"]。
+
+- 直接找到最好的 W 很難，但把目前的 W 改好一點很簡單。所以從隨機的 W 出發，**一步一步改進**（iterative refinement）[CS231n optimization-1 "Strategy #1: A first very bad idea solution: Random search"]。
+- 每一步往哪裡走，由 loss 的 **gradient** 決定，這就是 [gradient descent](concepts/gradient-descent.md)。它是所有神經網路函式庫的核心 [CS231n optimization-1 "Gradient Descent"]。
+- 走多大步（learning rate）是最重要的 hyperparameter 之一；資料太多時，每次只用一小批（mini-batch）來估計 gradient [CS231n optimization-1 "Gradient Descent"]。
+
+到這裡，**score function + loss function + optimization** 三個元件都到齊了。CS231n 的預告是：之後只要把 score function 換成神經網路、CNN，loss 和最佳化的過程大致不變 [CS231n optimization-1 "Introduction"]。
+
 ### 下一站（待補）
 
-依照 CS231n 的脈絡，接下來是**最佳化**（怎麼找到讓 loss 最小的 W）、神經網路，然後是 CNN。這些內容會在對應來源 ingest 之後補上。
+依照 CS231n 的脈絡，下一步是 **backpropagation**（用 chain rule 有效率地算出 gradient），然後是神經網路和 CNN [CS231n optimization-1 "Summary"]。這些內容會在對應來源 ingest 之後補上。
 
 ## 貫穿所有方法的紀律
 
@@ -66,4 +79,4 @@ CS231n 的伏筆是：CNN 從像素映射到分數的方式和這裡完全一樣
 | | Classification | Detection | Segmentation |
 |---|---|---|---|
 | **方法** | kNN（baseline）→ Linear classifier | （待補） | （待補） |
-| **資料集** | CIFAR-10 | （待補） | （待補） |
+| **資料集** | CIFAR-10、ILSVRC | （待補） | （待補） |

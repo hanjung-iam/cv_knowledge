@@ -48,6 +48,8 @@ $$
 L = \frac{1}{N}\sum_i L_i + \lambda R(W)
 $$
 
+> **符號說明**：本 Wiki 統一用 $\lambda$ 表示 regularization strength，和 linear-classify 筆記一致 [CS231n linear-classify "Multiclass Support Vector Machine loss"]。optimization-1 筆記把同一個 loss 寫成 $\ldots + \alpha R(W)$，用的是 $\alpha$ [CS231n optimization-1 "Introduction"]。兩者指的是同一件事。
+
 $\lambda$（regularization strength）是 hyperparameter，**沒有簡單的設定方式，通常用 cross-validation 決定** [CS231n linear-classify "Multiclass Support Vector Machine loss"]，詳見 [Hyperparameter Tuning](hyperparameter-tuning.md)。
 
 ### 動機二：小而分散的權重，泛化比較好
