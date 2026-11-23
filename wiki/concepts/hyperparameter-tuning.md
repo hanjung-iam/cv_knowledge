@@ -12,6 +12,8 @@ related:
   - concepts/regularization.md
   - concepts/loss-function.md
   - concepts/gradient-descent.md
+  - concepts/convolutional-layer.md
+  - concepts/convolutional-neural-network.md
 created: 2026-11-22
 updated: 2026-11-23
 ---
@@ -83,6 +85,12 @@ updated: 2026-11-23
 
 - **Learning rate（step size）**：CS231n 說它會成為訓練神經網路時**最重要、也最令人頭痛的 hyperparameter 之一** [CS231n optimization-1 "Computing the gradient numerically with finite differences"]。太小會很慢，太大則會走過頭，讓 loss 變高。詳見 [Gradient Descent](gradient-descent.md)。
 - **Batch size**：雖然是 hyperparameter，但**通常不用 cross-validation 來選**，而是依記憶體限制決定，或直接設成 32、64、128 這類 2 的次方 [CS231n optimization-1 "Gradient Descent"]。
+
+### CNN 的 hyperparameter
+
+- **Conv 層**有 4 個 hyperparameter：filter 數 K、filter 大小 F、stride S、zero-padding P；常見的設定是 F = 3、S = 1、P = 1 [CS231n convolutional-networks "Convolutional Layer"]。詳見 [Convolutional Layer](convolutional-layer.md)。
+- **Pool 層**有 2 個：大小 F、stride S；常見的是 F = 2、S = 2 [CS231n convolutional-networks "Pooling Layer"]。
+- **整個架構**也要做很多選擇，但 CS231n 建議在 90% 以上的應用中不必自己設計，而是直接用預訓練好的模型 finetune（「don't be a hero」）[CS231n convolutional-networks "Layer Patterns"]。詳見 [CNN](convolutional-neural-network.md)。
 
 這說明了一件事：先理解 hyperparameter 之間的關係，可以減少需要搜尋的組合（綜合推論，依據 [CS231n linear-classify "Practical Considerations"]）。
 

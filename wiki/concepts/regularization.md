@@ -10,6 +10,7 @@ related:
   - concepts/linear-classifier.md
   - concepts/softmax-cross-entropy.md
   - concepts/hyperparameter-tuning.md
+  - concepts/convolutional-neural-network.md
 created: 2026-11-23
 updated: 2026-11-23
 ---
@@ -88,6 +89,7 @@ SVM 的 margin $\Delta$ 和 $\lambda$ 控制的是**同一個取捨**：data los
 - [Linear Classifier](linear-classifier.md)：限制 W 的大小
 - [Softmax／Cross-Entropy](softmax-cross-entropy.md)：MAP 詮釋、對輸出「機率」的影響
 - [Hyperparameter Tuning](hyperparameter-tuning.md)：$\lambda$ 是典型的 hyperparameter
+- [CNN](convolutional-neural-network.md)：另一種控制 overfitting 的方式是**減少參數量**。一般神經網路的全連接結構參數太多，很快就會 overfitting；CNN 的 [parameter sharing](convolutional-layer.md) 和 [pooling 層](pooling-layer.md)都能減少參數 [CS231n convolutional-networks "Architecture Overview"; CS231n convolutional-networks "Pooling Layer"]
 
 ## 常見誤解
 

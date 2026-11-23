@@ -11,6 +11,8 @@ related:
   - concepts/loss-function.md
   - concepts/data-preprocessing.md
   - concepts/linear-classifier.md
+  - concepts/convolutional-layer.md
+  - concepts/pooling-layer.md
 created: 2026-11-23
 updated: 2026-11-23
 ---
@@ -174,6 +176,8 @@ CS231n 的結論：有了 backprop，就能有效率地算出 loss 對參數的 
 - [Gradient Descent](gradient-descent.md)：backprop 算出的 gradient 就是用來做 gradient descent
 - [Data Preprocessing](data-preprocessing.md)：mul gate 的特性說明了資料尺度為什麼重要
 - 之後的神經網路和 CNN：用 backprop 計算 gradient [CS231n optimization-2 "Summary"]
+- [Convolutional Layer](convolutional-layer.md)：卷積的 backward 也是一個卷積（filter 在空間上翻轉）[CS231n convolutional-networks "Convolutional Layer"]；同一個 depth slice 中各 neuron 的權重 gradient 會加總，這正是「分岔處 gradient 相加」的情況（綜合推論，依據 [CS231n convolutional-networks "Convolutional Layer"; CS231n optimization-2 "Backprop in practice: Staged computation"]）
+- [Pooling Layer](pooling-layer.md)：max pooling 的 backward 就是 max gate 的模式，forward 時會記下最大值的位置（switches）[CS231n convolutional-networks "Pooling Layer"]
 
 ## 常見誤解
 

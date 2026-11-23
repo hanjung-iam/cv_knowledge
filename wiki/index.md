@@ -8,7 +8,8 @@ Computer Vision 知識庫總目錄。每次 ingest 或新增頁面時更新。
 
 ## Models
 
-（尚無）
+- [AlexNet](models/alexnet.md) — ILSVRC 2012，讓 CNN 流行起來；第一層 11×11、stride 4（sources: 1）
+- [VGGNet](models/vggnet.md) — ILSVRC 2014 亞軍，證明深度很重要；全部 3×3 conv，138M 參數（sources: 1）
 
 ## Tasks
 
@@ -25,12 +26,15 @@ Computer Vision 知識庫總目錄。每次 ingest 或新增頁面時更新。
 - [Gradient Descent](concepts/gradient-descent.md) — numerical 與 analytic gradient、gradient check、learning rate、mini-batch／SGD（sources: 1）
 - [Backpropagation](concepts/backpropagation.md) — chain rule、電路圖、local gradient、add／max／mul 的模式、staged computation（sources: 1）
 - [Data Preprocessing](concepts/data-preprocessing.md) — centering、縮放；資料尺度會影響 gradient 與 learning rate（sources: 1）
+- [Convolutional Neural Network (CNN)](concepts/convolutional-neural-network.md) — 為影像設計的神經網路；3D volume、層的排列模式、經典架構演進（sources: 1）
+- [Convolutional Layer](concepts/convolutional-layer.md) — local connectivity、輸出大小公式、parameter sharing、im2col（sources: 1）
+- [Pooling Layer](concepts/pooling-layer.md) — max pooling、downsampling、backward 的 switches（sources: 1）
 - [Hyperparameter Tuning](concepts/hyperparameter-tuning.md) — validation set、cross-validation、test set 只用一次；λ 要調、Δ 不用調；learning rate、batch size（sources: 1）
 
 ## Datasets
 
 - [CIFAR-10](datasets/cifar-10.md) — 60,000 張 32×32 影像、10 類的入門資料集（sources: 1）
-- [ILSVRC](datasets/ilsvrc.md) — 大規模影像分類挑戰賽，約 120 萬張訓練影像（內容很少）（sources: 1）
+- [ILSVRC](datasets/ilsvrc.md) — ImageNet 的大規模影像分類挑戰賽，約 120 萬張訓練影像；歷年 CNN 冠軍（sources: 1）
 
 ## Comparisons
 
@@ -40,4 +44,4 @@ Computer Vision 知識庫總目錄。每次 ingest 或新增頁面時更新。
 
 | cite key | 頁面 | 說明 |
 |---|---|---|
-| `CS231n` | [CS231n 課程筆記](sources/cs231n.md) | Stanford CS231n 課程筆記（已 ingest：classification、linear-classify、optimization-1、optimization-2） |
+| `CS231n` | [CS231n 課程筆記](sources/cs231n.md) | Stanford CS231n 課程筆記（已 ingest：classification、linear-classify、optimization-1、optimization-2、convolutional-networks） |

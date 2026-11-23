@@ -77,3 +77,14 @@ Append-only 操作紀錄。格式：`## [YYYY-MM-DD] <type> | <title>`，type �
 - lint：0 / 3（2 處「正規化」未附英文、1 處清單未引用）→ 0 / 0
 - 檢查點 A：sigmoid 不獨立成頁；建立 data-preprocessing
 - 檢查點 B：通過
+
+## [2026-11-23] ingest | CS231n — convolutional-networks
+- 新增：concepts/convolutional-neural-network.md, concepts/convolutional-layer.md, concepts/pooling-layer.md, models/alexnet.md, models/vggnet.md
+- 更新：datasets/ilsvrc.md（ImageNet 名稱、歷年成績）, tasks/image-classification.md（方法表加資料集與指標欄、第四步）, overview.md（第六站）, concepts/linear-classifier.md, concepts/backpropagation.md, concepts/hyperparameter-tuning.md, concepts/gradient-descent.md, concepts/regularization.md, datasets/cifar-10.md, sources/cs231n.md, index.md
+- 數字核對：55 項吻合；引用的 12 個小節標題皆存在；驗算發現原文 VGG 記憶體總量（24M）與逐層加總（約 15.2M）不符、AlexNet 的一段描述與 VGGNet 吻合（皆標綜合推論）
+- lint：0 / 3 → 0 / 0；review：補 8 處連結（1 處 kernel 為同形異義誤報）
+- 檢查點 A：只為 AlexNet、VGGNet 建模型頁；ILSVRC 加 ImageNet aliases；使用者補下載 neural-networks-1
+- 檢查點 B：通過
+
+## [2026-11-23] schema | Ingest 步驟 ⑤ 加入 review.py
+- 單次 ingest 也要跑 review.py 的「未連結的提及」，不只在全域 lint 時使用

@@ -12,6 +12,7 @@ related:
   - datasets/ilsvrc.md
   - concepts/backpropagation.md
   - concepts/data-preprocessing.md
+  - concepts/convolutional-neural-network.md
 created: 2026-11-23
 updated: 2026-11-23
 ---
@@ -120,6 +121,10 @@ gradient 告訴我們**方向**，但沒有告訴我們**要走多遠**。這個
 ### Batch size 怎麼選
 
 batch size 是 hyperparameter，但**通常不用 cross-validation 來選**，而是依記憶體限制決定，或直接設成 32、64、128 這類值。用 2 的次方，是因為很多向量化運算在輸入大小是 2 的次方時跑得比較快 [CS231n optimization-1 "Gradient Descent"]。
+
+### Batch size 與記憶體
+
+訓練 CNN 時記憶體是最大的瓶頸。網路放不進記憶體時，常見的做法是**減小 batch size**，因為大部分記憶體通常被 activation 用掉 [CS231n convolutional-networks "Computational Considerations"]。另外，如果最佳化方法使用 momentum、Adagrad 或 RMSProp，還需要額外的記憶體來存這些方法的暫存值 [CS231n convolutional-networks "Computational Considerations"]。這三種方法目前的來源只提到名稱，沒有介紹內容。
 
 ### 其他最佳化方法
 

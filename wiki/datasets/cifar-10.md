@@ -15,6 +15,7 @@ related:
   - concepts/linear-classifier.md
   - concepts/optimization.md
   - datasets/ilsvrc.md
+  - concepts/convolutional-neural-network.md
 created: 2026-11-22
 updated: 2026-11-23
 ---
@@ -59,6 +60,8 @@ updated: 2026-11-23
 **Linear classifier 在 CIFAR-10 上的設定**：每張影像是 3072 × 1 的向量，W 是 10 × 3072，b 是 10 × 1；使用 bias trick 之後，分別變成 3073 × 1 和 10 × 3073 [CS231n linear-classify "Parameterized mapping from images to label scores"; CS231n linear-classify "Interpreting a linear classifier"]。W 加上 bias 共有 30,730 個參數 [CS231n optimization-1 "Visualizing the loss function"]。linear-classify 筆記**沒有提供** linear classifier 在 CIFAR-10 上的 accuracy；optimization-1 筆記則提供了用很差的最佳化方法訓練的結果，見下表。
 
 **從學到的模板看資料集的特性**：linear classifier 學出的 car 模板是紅色的，這暗示 CIFAR-10 裡紅色的車比其他顏色多；horse 模板有兩個頭，反映資料中同時有朝左和朝右的馬 [CS231n linear-classify "Interpreting a linear classifier"]。詳見 [Linear Classifier](../concepts/linear-classifier.md)。
+
+**CNN 在 CIFAR-10 上**：如果用一般的神經網路，第一層的**一個** fully-connected neuron 就有 32 × 32 × 3 = 3,072 個權重 [CS231n convolutional-networks "Architecture Overview"]。一個簡單的 CNN 範例 `INPUT -> CONV -> RELU -> POOL -> FC`，會把 32 × 32 × 3 的輸入一路轉成 1 × 1 × 10 的類別分數 [CS231n convolutional-networks "Layers used to build ConvNets"]。詳見 [CNN](../concepts/convolutional-neural-network.md)。
 
 Validation 切分範例：從 50,000 張 training set 中取 1,000 張當 validation，用 49,000 張訓練 [CS231n classification "Validation sets for Hyperparameter tuning"]。詳見 [Hyperparameter Tuning](../concepts/hyperparameter-tuning.md)。
 

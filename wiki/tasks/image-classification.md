@@ -77,13 +77,16 @@ CS231n 列出的難點如下。它強調這份清單並不完整 [CS231n classif
 
 之後隨著來源增加會持續補充。
 
-| 方法 | 核心想法 | CIFAR-10 accuracy | 頁面 |
+| 方法 | 核心想法 | 成績（資料集、指標） | 頁面 |
 |---|---|---|---|
-| Nearest Neighbor（L1 距離） | 找訓練集中最像的那張圖，直接沿用它的標籤 | 38.6% [CS231n classification "Nearest Neighbor Classifier"] | [k-Nearest Neighbor](../concepts/k-nearest-neighbor.md) |
-| Nearest Neighbor（L2 距離） | 同上，換成歐氏距離 | 35.4% [CS231n classification "Nearest Neighbor Classifier"] | [k-Nearest Neighbor](../concepts/k-nearest-neighbor.md) |
-| Linear classifier（SVM loss） | 學出一組權重 W，每個類別一個「模板」，分數 = Wx + b | 用 random search 訓練：約 15.5%；用 random local search 訓練：21.4%（只反映很差的最佳化方法）[CS231n optimization-1 "Strategy #1: A first very bad idea solution: Random search"; CS231n optimization-1 "Strategy #2: Random Local Search"] | [Linear Classifier](../concepts/linear-classifier.md) |
+| Nearest Neighbor（L1 距離） | 找訓練集中最像的那張圖，直接沿用它的標籤 | CIFAR-10 accuracy 38.6% [CS231n classification "Nearest Neighbor Classifier"] | [k-Nearest Neighbor](../concepts/k-nearest-neighbor.md) |
+| Nearest Neighbor（L2 距離） | 同上，換成歐氏距離 | CIFAR-10 accuracy 35.4% [CS231n classification "Nearest Neighbor Classifier"] | [k-Nearest Neighbor](../concepts/k-nearest-neighbor.md) |
+| Linear classifier（SVM loss） | 學出一組權重 W，每個類別一個「模板」，分數 = Wx + b | CIFAR-10 accuracy：用 random search 訓練約 15.5%；用 random local search 訓練 21.4%（只反映很差的最佳化方法）[CS231n optimization-1 "Strategy #1: A first very bad idea solution: Random search"; CS231n optimization-1 "Strategy #2: Random Local Search"] | [Linear Classifier](../concepts/linear-classifier.md) |
+| CNN：[AlexNet](../models/alexnet.md)（2012） | 用 conv 層學出局部特徵，並在不同位置共用參數 | ILSVRC 2012 top-5 error 16%（第二名 26%）[CS231n convolutional-networks "Case studies"] | [CNN](../concepts/convolutional-neural-network.md) |
 
-參考線：
+表中的成績來自**不同的資料集和指標**，不能直接互相比較。
+
+CIFAR-10 的參考線：
 
 - 隨機猜測：10%（10 個類別）[CS231n classification "Nearest Neighbor Classifier"]
 - 人類：估計約 94% [CS231n classification "Nearest Neighbor Classifier"]
@@ -114,7 +117,15 @@ CS231n 也預告，後續課程的方法可以做到：
 
 到這裡，「score function + loss function + optimization」三個元件都到齊了。CS231n 預告，接下來只要把 score function 換成神經網路、CNN，loss 和最佳化的過程大致不變 [CS231n optimization-1 "Introduction"]。
 
-神經網路和 CNN，會在之後 ingest 對應來源時補進這一節。
+### 第四步：CNN — 為影像量身打造的 score function
+
+[CNN](../concepts/convolutional-neural-network.md) 沿用 loss、optimization、[backprop](../concepts/backpropagation.md)，換掉的只有 score function [CS231n convolutional-networks "Convolutional Neural Networks (CNNs / ConvNets)"]。它利用「輸入是影像」這個前提，讓每個 neuron 只看一小塊區域（[conv layer](../concepts/convolutional-layer.md)），並在不同位置共用同一組權重，所以參數大幅減少 [CS231n convolutional-networks "Convolutional Layer"]。
+
+網路學出來的 filter，在第一層是各種方向的邊緣和色塊，到了較高的層則是更複雜的圖案 [CS231n convolutional-networks "Convolutional Layer"]。這正是 kNN 那一步得出的結論「必須超越 raw pixel」的答案：**不再比對像素，而是學出特徵**（綜合推論，依據 [CS231n classification "Pros and Cons of Nearest Neighbor classifier"; CS231n convolutional-networks "Convolutional Layer"]）。
+
+2012 年，[AlexNet](../models/alexnet.md) 在 [ILSVRC](../datasets/ilsvrc.md) 上大幅領先，讓 CNN 在 Computer Vision 中流行起來；之後 [VGGNet](../models/vggnet.md) 證明了深度的重要性，ResNet 則用 skip connections 繼續推進 [CS231n convolutional-networks "Case studies"]。
+
+**中間少了一步**：CNN 是建立在一般「神經網路」之上的，但目前 Wiki 還沒有收錄介紹神經網路的來源。
 
 ## 相關概念
 
@@ -123,5 +134,6 @@ CS231n 也預告，後續課程的方法可以做到：
 - [Loss Function](../concepts/loss-function.md)、[Softmax／Cross-Entropy](../concepts/softmax-cross-entropy.md)、[Regularization](../concepts/regularization.md)：訓練用的框架
 - [Optimization](../concepts/optimization.md)、[Gradient Descent](../concepts/gradient-descent.md)：如何找到好的參數
 - [Hyperparameter Tuning](../concepts/hyperparameter-tuning.md)：如何正確地調整與評估
+- [CNN](../concepts/convolutional-neural-network.md)、[Convolutional Layer](../concepts/convolutional-layer.md)、[Pooling Layer](../concepts/pooling-layer.md)：CNN 與它的組成元件
 - [CIFAR-10](../datasets/cifar-10.md)：入門常用的資料集
 - [ILSVRC](../datasets/ilsvrc.md)：大規模的資料集

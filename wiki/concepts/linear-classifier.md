@@ -16,6 +16,7 @@ related:
   - concepts/gradient-descent.md
   - concepts/data-preprocessing.md
   - concepts/backpropagation.md
+  - concepts/convolutional-neural-network.md
 created: 2026-11-23
 updated: 2026-11-23
 ---
@@ -162,4 +163,5 @@ CS231n 預告的解法是神經網路：hidden layer 的中間神經元可以分
 - [Loss Function](loss-function.md)、[Softmax／Cross-Entropy](softmax-cross-entropy.md)：用來評估和訓練 linear classifier
 - [Regularization](regularization.md)：限制 W 的大小
 - [CIFAR-10](../datasets/cifar-10.md)：筆記中的例子
+- [CNN](convolutional-neural-network.md)：在 CNN 的層排列模式中，`INPUT -> FC`（沒有任何 conv、pool 層）就是 linear classifier [CS231n convolutional-networks "Layer Patterns"]
 - 之後的神經網路和 CNN：沿用同樣的「score function + loss function」框架 [CS231n linear-classify "Parameterized mapping from images to label scores"]

@@ -18,6 +18,11 @@ related:
   - datasets/ilsvrc.md
   - concepts/backpropagation.md
   - concepts/data-preprocessing.md
+  - concepts/convolutional-neural-network.md
+  - concepts/convolutional-layer.md
+  - concepts/pooling-layer.md
+  - models/alexnet.md
+  - models/vggnet.md
 created: 2026-11-22
 updated: 2026-11-23
 ---
@@ -25,7 +30,7 @@ updated: 2026-11-23
 # Overview：Computer Vision 的演進主線
 
 > 這頁是整個 Wiki 的入口，會隨著每次 ingest 更新。
-> 目前收錄的來源：CS231n（classification、linear-classify、optimization-1、optimization-2）。
+> 目前收錄的來源：CS231n（classification、linear-classify、optimization-1、optimization-2、convolutional-networks）。
 
 ## Computer Vision 要解決什麼問題
 
@@ -75,9 +80,23 @@ gradient descent 需要 loss 對每個權重的 gradient。[Backpropagation](con
 
 CS231n 的說法是：觀念上最難的部分已經過去了，**ConvNets 只差一小步** [CS231n optimization-2 "Summary"]。
 
+### 第六站：CNN — 為影像量身打造的 score function
+
+[CNN](concepts/convolutional-neural-network.md) 沿用前面的 loss、optimization、backprop，**只換掉 score function** [CS231n convolutional-networks "Convolutional Neural Networks (CNNs / ConvNets)"]。這印證了 optimization-1 的預告 [CS231n optimization-1 "Introduction"]。
+
+它利用「輸入是影像」這個前提做了兩件事 [CS231n convolutional-networks "Convolutional Layer"]：
+
+- **Local connectivity**：每個 neuron 只看一小塊區域（[conv layer](concepts/convolutional-layer.md)）。
+- **Parameter sharing**：同一個 filter 在整張圖上滑動，到處找同樣的特徵。以 AlexNet 第一層為例，參數量從 105,705,600 降到 34,944。
+
+再加上 [pooling layer](concepts/pooling-layer.md) 逐步縮小尺寸，最後接 FC 層算出類別分數。網路學到的 filter 在第一層是邊緣和色塊，在高層是更複雜的圖案 [CS231n convolutional-networks "Convolutional Layer"]。這回答了 kNN 留下的問題：**不再比對像素，而是學出特徵**（綜合推論，依據 [CS231n classification "Pros and Cons of Nearest Neighbor classifier"; CS231n convolutional-networks "Convolutional Layer"]）。
+
+經典架構在 [ILSVRC](datasets/ilsvrc.md) 上接力前進：[AlexNet](models/alexnet.md)（2012）讓 CNN 流行起來，[VGGNet](models/vggnet.md)（2014）證明深度很重要，ResNet（2015）用 skip connections 繼續推進 [CS231n convolutional-networks "Case studies"]。
+
 ### 下一站（待補）
 
-依照 CS231n 的脈絡，接下來是神經網路和 CNN。這些內容會在對應來源 ingest 之後補上。
+- **神經網路**：CNN 建立在一般的神經網路之上，但目前還沒有收錄介紹神經網路的來源。
+- **更深的模型**：ResNet、以及之後的 Vision Transformer 等，會在對應來源 ingest 之後補上。
 
 ## 貫穿所有方法的紀律
 
@@ -88,5 +107,6 @@ CS231n 的說法是：觀念上最難的部分已經過去了，**ConvNets 只�
 
 | | Classification | Detection | Segmentation |
 |---|---|---|---|
-| **方法** | kNN（baseline）→ Linear classifier | （待補） | （待補） |
+| **方法** | kNN（baseline）→ Linear classifier → CNN | （待補） | （待補） |
+| **模型** | [AlexNet](models/alexnet.md) → [VGGNet](models/vggnet.md) | （待補） | （待補） |
 | **資料集** | [CIFAR-10](datasets/cifar-10.md)、[ILSVRC](datasets/ilsvrc.md) | （待補） | （待補） |
