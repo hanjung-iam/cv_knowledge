@@ -25,6 +25,7 @@ TYPE_REQUIRED = {
     "model": ["year", "family", "tasks"],
     "task": ["metrics"],
     "concept": [],
+    "dataset": ["year", "size", "num_classes", "tasks"],
     "comparison": [],
     "overview": [],
 }
@@ -42,7 +43,10 @@ NUMBER_RE = re.compile(
     r"|\d+(?:\.\d+)?\s?倍"
 )
 # source 頁中，「位置」欄這類標記也算引用
-LOCATION_RE = re.compile(r"§\s?\d|\bp\.\s?\d|\bTable\s?\d|\bFig\.?\s?\d|\bSec\.?\s?\d")
+# 教材類來源用引號括起的小節標題當位置，例如 classification "Nearest Neighbor Classifier"
+LOCATION_RE = re.compile(r"§\s?\d|\bp\.\s?\d|\bTable\s?\d|\bFig\.?\s?\d|\bSec\.?\s?\d|\"[^\"]{3,}\"")
+# 時效性字眼：需要標 `截至 ...`
+TIME_SENSITIVE_RE = re.compile(r"state[- ]of[- ]the[- ]art|\bSOTA\b|\brecent\b|目前最|當前最|最新|最先進", re.I)
 CONFLICT_OPEN = "⚠️ **來源差異**"
 CONFLICT_DONE = "✅ **來源差異（已釐清）**"
 
@@ -172,6 +176,14 @@ def check_numbers(p: wl.Page, r: Report):
         r.add("warning", f"`{p.rel}:{ln}`：含數字（{sample}）但沒有引用")
 
 
+def check_time_sensitive(p: wl.Page, r: Report):
+    for ln, text in _units(p):
+        cleaned = wl.CITE_RE.sub("", wl.LINK_RE.sub("", text))
+        m = TIME_SENSITIVE_RE.search(cleaned)
+        if m and "截至" not in text:
+            r.add("warning", f"`{p.rel}:{ln}`：含時效性字眼「{m.group(0)}」但沒有標 `（截至 …）`")
+
+
 def check_index(pages: list[wl.Page], special: dict, wiki_dir: Path, r: Report):
     idx = special.get("index.md")
     if idx is None:
@@ -185,9 +197,11 @@ def check_index(pages: list[wl.Page], special: dict, wiki_dir: Path, r: Report):
 
 
 def check_orphans(pages: list[wl.Page], wiki_dir: Path, r: Report):
+    """連結與引用都算連入：被 [KEY …] 引用的 source 頁不是孤兒。"""
     inbound = defaultdict(set)
+    keys = wl.cite_key_map(pages)
     for p in pages:
-        for dest in wl.internal_page_links(p, wiki_dir):
+        for dest in wl.internal_page_links(p, wiki_dir) + wl.cited_sources(p, keys):
             if dest != p.rel:
                 inbound[dest].add(p.rel)
     for p in pages:
@@ -237,6 +251,7 @@ def run(root: Path) -> tuple[Report, int]:
     for p in pages:
         check_citations(p, keys, r)
         check_numbers(p, r)
+        check_time_sensitive(p, r)
     check_index(pages, special, wiki_dir, r)
     check_orphans(pages, wiki_dir, r)
     check_raw(root, pages, r)

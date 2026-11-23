@@ -11,7 +11,7 @@ from pathlib import Path
 # 不視為一般 Wiki 頁面的特殊檔案（相對於 wiki/）
 SPECIAL_PAGES = {"index.md", "log.md"}
 
-PAGE_TYPES = {"model", "task", "concept", "source", "comparison", "overview"}
+PAGE_TYPES = {"model", "task", "concept", "dataset", "source", "comparison", "overview"}
 
 # ---------------------------------------------------------------- frontmatter
 
@@ -213,6 +213,27 @@ def resolve_link(page: Page, target: str, wiki_dir: Path) -> Path:
     target = target.split("#", 1)[0]
     from urllib.parse import unquote
     return (page.path.parent / unquote(target)).resolve()
+
+
+def cite_key_map(pages: list[Page]) -> dict[str, str]:
+    """cite key → source 頁（相對於 wiki/）。重複的 key 以第一個為準（重複由 lint 回報）。"""
+    out: dict[str, str] = {}
+    for p in pages:
+        k = (p.fm or {}).get("cite_key") if p.type == "source" else None
+        if isinstance(k, str) and k and k not in out:
+            out[k] = p.rel
+    return out
+
+
+def cited_sources(page: Page, keys: dict[str, str]) -> list[str]:
+    """本頁透過 [KEY …] 引用到的 source 頁（去重、保序），不含自己。"""
+    seen, out = set(), []
+    for _, k, _ in page.cites:
+        dest = keys.get(k)
+        if dest and dest != page.rel and dest not in seen:
+            seen.add(dest)
+            out.append(dest)
+    return out
 
 
 def internal_page_links(page: Page, wiki_dir: Path) -> list[str]:

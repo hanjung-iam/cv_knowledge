@@ -37,6 +37,7 @@ cv_wiki_project/
 │   ├── models/            ← 縱軸：模型頁
 │   ├── tasks/             ← 橫軸：任務頁
 │   ├── concepts/          ← 概念頁
+│   ├── datasets/          ← 資料集頁（CIFAR-10、ImageNet、COCO…）
 │   └── comparisons/       ← 比較與綜合分析（包含 query 產出的好答案）
 ├── tools/                 ← lint 與關聯圖腳本（Python，只用標準函式庫）
 │   └── out/               ← 腳本產出（graph.html、lint 報告）
@@ -97,7 +98,7 @@ cv_wiki_project/
 ```yaml
 ---
 title: ResNet
-type: model            # model | task | concept | source | comparison | overview
+type: model            # model | task | concept | dataset | source | comparison | overview
 aliases: [Residual Network, 殘差網路]
 tags: [cnn, backbone]
 sources: [ResNet, CS231n]      # 本頁引用到的 cite key
@@ -117,6 +118,7 @@ updated: 2026-11-22
 | `model` | `year`、`family`（`cnn` / `transformer` / `hybrid`）、`tasks`（適用任務的清單） |
 | `task` | `metrics`（評估指標的清單） |
 | `concept` | `first_introduced`（首次提出的 cite key，若可確定） |
+| `dataset` | `year`、`size`（例如 `60,000 images`）、`num_classes`、`tasks`。來源沒有提供的值寫 `unknown`，不得憑記憶補上 |
 
 ---
 
@@ -142,6 +144,12 @@ updated: 2026-11-22
 - 表格／圖：`[ResNet Table 4]`、`[ViT Fig. 1]`
 - 多個來源：`[ResNet §4.1; CS231n]`
 - 教學網頁沒有章節編號時，寫小節標題：`[CS231n "Pooling Layer"]`
+- 一個 cite key 對應多個 raw 檔時（例如同一門課的多篇筆記），位置前面要加上檔名（不含副檔名）：`[CS231n classification "Nearest Neighbor Classifier"]`
+- 資訊來自圖片而不是文字時，在位置後面加「圖」：`[CS231n classification "Validation sets for Hyperparameter tuning" 圖]`
+
+### 同一來源內部不一致
+
+同一份來源前後說法不同（例如兩段給了不同的數字範圍）時，不使用第 7 節的來源差異標記，而是兩個說法都保留，並各自標出位置。
 
 ### 必須引用的主張
 
@@ -157,6 +165,16 @@ updated: 2026-11-22
 - 數字要**照原文抄寫**，不得四捨五入或換算。如果需要換算（例如 error ↔ accuracy），要同時保留原始數字，並註明是換算的。
 - 一定要寫清楚數字的條件：資料集、split、single-model 或 ensemble、哪一個模型變體。
   例如：「ResNet-152 single-model 在 ImageNet validation 上的 top-5 error 為 X% [ResNet Table 4]」。
+
+### 時效性主張
+
+「目前最好」「state-of-the-art」「最新」「最近的比賽」這類說法，只在來源撰寫的當時成立。寫入 Wiki 時必須加上時間背景，格式為 `（截至 <時間背景>）`：
+
+```markdown
+（截至 CS231n 筆記撰寫時）CIFAR-10 上 state-of-the-art 的 CNN 約達 95% [CS231n classification "Nearest Neighbor Classifier"]。
+```
+
+時間背景盡量具體（論文寫年份，例如 `截至 2015 年`）。來源沒有寫明日期時，就寫來源名稱，不要自己推測年份。lint 會檢查含 SOTA、最新等字眼的段落是否標了 `截至`。
 
 ### 綜合推論
 
@@ -270,13 +288,32 @@ lint 會統計還有幾個 `⚠️ **來源差異**` 沒有釐清。
 ## 由哪次 query 產生  ← 日期與原始問題
 ```
 
-### 8.6 overview（`overview.md`）
+### 8.6 dataset 頁（`datasets/`）
+
+```markdown
+# <資料集名稱>
+
+## 一句話說明
+## 規模與組成       ← 影像數、解析度、類別數、train/val/test 切分（數字要引用）
+## 用途             ← 適用任務，連到 tasks/
+## 在 Wiki 中的使用 ← 哪些模型或方法用它做實驗、得到什麼結果（連到 models/、concepts/）
+## 限制與注意事項
+```
+
+### 8.7 overview（`overview.md`）
 
 整個 CV 演進主線的綜述，作為 Wiki 的入口。每次 ingest 之後檢查是否需要更新。
 
 ---
 
 ## 9. Workflow
+
+### 9.0 讀取 raw 檔的方式
+
+- 同一份內容同時有 `.md` 和 `.pdf` 時：**文字以 `.md` 為準**（比較好解析），**圖片從 `.pdf` 取得**。兩個檔案都列進 `raw_path`。
+- PDF 的文字抽不出來時（例如以影像存檔），要在 source 頁的基本資訊註明。
+- 圖片要實際看過才能引用；圖片裡的數字（例如曲線的數值範圍）只寫圖上直接看得到的，不推測實驗設定。
+- **不把來源的圖片複製到 `wiki/`**（版權考量）。需要時用文字描述圖片的內容；簡報需要示意圖時，用 SVG 自己重新繪製。
 
 ### 9.1 Ingest Loop（每份來源一次，逐篇進行）
 
@@ -383,6 +420,7 @@ lint 會統計還有幾個 `⚠️ **來源差異**` 沒有釐清。
 | 孤兒頁（沒有任何頁面連到它） | warning |
 | 頁面沒有列在 `index.md` | warning |
 | 包含數字（%、小數、M／B 參數量等）但同一段沒有引用 | warning |
+| 含時效性字眼（SOTA、state-of-the-art、最新、recent…）但同一段沒有 `截至` | warning |
 | `raw/` 中有檔案但沒有對應的 source 頁 | info |
 | 未釐清的 `⚠️ **來源差異**` 數量 | info |
 

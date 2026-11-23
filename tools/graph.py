@@ -20,6 +20,7 @@ import wikilib as wl  # noqa: E402
 def build(root: Path) -> dict:
     wiki_dir, pages, _ = wl.load_wiki(root)
     ids = {p.rel for p in pages}
+    keys = wl.cite_key_map(pages)
     nodes, edges = [], []
     for p in pages:
         fm = p.fm or {}
@@ -31,9 +32,13 @@ def build(root: Path) -> dict:
             "sources": wl.as_list(fm.get("sources")),
             "updated": fm.get("updated", "") if isinstance(fm.get("updated"), str) else "",
         })
-        for dest in wl.internal_page_links(p, wiki_dir):
+        links = wl.internal_page_links(p, wiki_dir)
+        for dest in links:
             if dest in ids and dest != p.rel:
-                edges.append({"source": p.rel, "target": dest})
+                edges.append({"source": p.rel, "target": dest, "kind": "link"})
+        for dest in wl.cited_sources(p, keys):
+            if dest in ids and dest not in links:
+                edges.append({"source": p.rel, "target": dest, "kind": "cite"})
     return {"nodes": nodes, "edges": edges}
 
 
@@ -48,14 +53,14 @@ HTML = r"""<!doctype html>
   --bg:#f7f7f5; --panel:#ffffff; --fg:#1f2328; --muted:#6a737d; --line:#d0d7de;
   --edge:rgba(80,90,100,.28); --edge-hi:rgba(30,40,50,.85);
   --model:#2f6fdd; --task:#d9822b; --concept:#2a9d6f; --source:#8a63d2;
-  --comparison:#c94f7c; --overview:#444; --unknown:#999;
+  --comparison:#c94f7c; --overview:#444; --unknown:#999; --dataset:#a0892c;
 }
 @media (prefers-color-scheme: dark){
   :root{
     --bg:#16181b; --panel:#1f2226; --fg:#e6e6e6; --muted:#9aa4ae; --line:#33383e;
     --edge:rgba(200,205,210,.22); --edge-hi:rgba(235,240,245,.9);
     --model:#6aa1ff; --task:#f0a55a; --concept:#4cc79a; --source:#b192f0;
-    --comparison:#ef7ea6; --overview:#ddd; --unknown:#777;
+    --comparison:#ef7ea6; --overview:#ddd; --unknown:#777; --dataset:#d8c060;
   }
 }
 *{box-sizing:border-box}
@@ -87,7 +92,7 @@ input[type=search]{width:100%;padding:6px 8px;border:1px solid var(--line);borde
 <body>
 <div id="app">
   <div id="stage"><canvas id="c"></canvas>
-    <div class="hint">拖曳節點移動・拖曳背景平移・滾輪縮放・點節點看詳細</div></div>
+    <div class="hint">實線＝連結、虛線＝引用・拖曳節點移動・拖曳背景平移・滾輪縮放・點節點看詳細</div></div>
   <aside id="side">
     <h1>CV Wiki 關聯圖</h1>
     <div class="muted" id="stats"></div>
@@ -99,7 +104,7 @@ input[type=search]{width:100%;padding:6px 8px;border:1px solid var(--line);borde
 <script>
 const DATA = __DATA__;
 const TYPE_LABEL = {overview:"Overview",model:"Model",task:"Task",concept:"Concept",
-  comparison:"Comparison",source:"Source",unknown:"Unknown"};
+  dataset:"Dataset",comparison:"Comparison",source:"Source",unknown:"Unknown"};
 // 顏色從 CSS 變數讀取後快取；切換深淺色主題時重新讀取
 let CSS_CACHE = {};
 const css = n => CSS_CACHE[n] ??= getComputedStyle(document.documentElement).getPropertyValue(n).trim();
@@ -108,7 +113,7 @@ const color = t => css("--" + (TYPE_LABEL[t] ? t : "unknown"));
 
 const nodes = DATA.nodes.map((n,i)=>({...n, x:Math.cos(i)*200*Math.random(), y:Math.sin(i)*200*Math.random(), vx:0, vy:0}));
 const byId = Object.fromEntries(nodes.map(n=>[n.id,n]));
-const edges = DATA.edges.filter(e=>byId[e.source]&&byId[e.target]).map(e=>({s:byId[e.source],t:byId[e.target]}));
+const edges = DATA.edges.filter(e=>byId[e.source]&&byId[e.target]).map(e=>({s:byId[e.source],t:byId[e.target],cite:e.kind==="cite"}));
 nodes.forEach(n=>{n.out=[];n.in=[];});
 edges.forEach(e=>{e.s.out.push(e.t);e.t.in.push(e.s);});
 nodes.forEach(n=>n.r=6+Math.sqrt(n.in.length+n.out.length)*3);
@@ -157,7 +162,9 @@ function draw(){
     const hi=focus&&(e.s===focus||e.t===focus);
     ctx.strokeStyle=hi?css("--edge-hi"):css("--edge");ctx.lineWidth=(hi?1.8:1)/view.k;
     ctx.globalAlpha=focus&&!hi?0.25:1;
+    ctx.setLineDash(e.cite?[4/view.k,4/view.k]:[]);   // 引用關係畫虛線
     ctx.beginPath();ctx.moveTo(e.s.x,e.s.y);ctx.lineTo(e.t.x,e.t.y);ctx.stroke();
+    ctx.setLineDash([]);
     if(hi){const a=Math.atan2(e.t.y-e.s.y,e.t.x-e.s.x),r=e.t.r+2,x=e.t.x-Math.cos(a)*r,y=e.t.y-Math.sin(a)*r,s=7/view.k;
       ctx.fillStyle=css("--edge-hi");ctx.beginPath();ctx.moveTo(x,y);
       ctx.lineTo(x-Math.cos(a-0.4)*s,y-Math.sin(a-0.4)*s);ctx.lineTo(x-Math.cos(a+0.4)*s,y-Math.sin(a+0.4)*s);ctx.fill();}
